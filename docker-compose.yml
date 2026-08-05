@@ -1,0 +1,21 @@
+services:
+  php:
+    build:
+      context: .
+      args:
+        UID: ${DOCKER_UID:-1001}
+        GID: ${DOCKER_GID:-1001}
+    volumes:
+      - .:/app
+      - composer-cache:/composer
+    working_dir: /app
+    environment:
+      XDEBUG_MODE: ${XDEBUG_MODE:-off}
+      STORYBLOK_SPACE_ID: ${STORYBLOK_SPACE_ID:-}
+      STORYBLOK_MANAGEMENT_TOKEN: ${STORYBLOK_MANAGEMENT_TOKEN:-}
+    tty: true
+    stdin_open: true
+    command: ["tail", "-f", "/dev/null"]
+
+volumes:
+  composer-cache:

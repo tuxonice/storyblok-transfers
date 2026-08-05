@@ -1,0 +1,15 @@
+{
+    "transfers": [
+        {
+            "name": "Grid",
+            "properties": [
+                {
+                    "name": "columns",
+                    "type": "BlokTransfer[]",
+                    "singular": "column",
+                    "namespace": "Pixel\\StoryblokTransferGenerator\\Transfers\\BlokTransfer"
+                }
+            ]
+        }
+    ]
+}

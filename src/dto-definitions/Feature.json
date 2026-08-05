@@ -1,0 +1,14 @@
+{
+    "transfers": [
+        {
+            "name": "Feature",
+            "properties": [
+                {
+                    "name": "name",
+                    "type": "string",
+                    "nullable": true
+                }
+            ]
+        }
+    ]
+}

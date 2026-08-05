@@ -1,0 +1,50 @@
+{
+    "transfers": [
+        {
+            "name": "Article",
+            "properties": [
+                {
+                    "name": "title",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "teaser",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "content",
+                    "type": "array",
+                    "nullable": true
+                },
+                {
+                    "name": "folder",
+                    "type": "array",
+                    "nullable": true
+                },
+                {
+                    "name": "featuredImage",
+                    "type": "AssetTransfer",
+                    "nullable": true,
+                    "namespace": "Pixel\\StoryblokTransferGenerator\\Transfers\\AssetTransfer"
+                },
+                {
+                    "name": "categories",
+                    "type": "string[]",
+                    "singular": "category"
+                },
+                {
+                    "name": "author",
+                    "type": "string",
+                    "nullable": true
+                },
+                {
+                    "name": "token",
+                    "type": "array",
+                    "nullable": true
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,40 @@
+{
+    "name": "tuxonice/storyblok-transfers",
+    "description": "Generate and hydrate PHP Transfer Objects from Storyblok component schemas",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["storyblok", "dto", "transfer-objects", "codegen"],
+    "require": {
+        "php": "^8.1",
+        "ext-json": "*",
+        "tuxonice/transfer-objects": "^1.1",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.2",
+        "phpunit/phpunit": "^10.5",
+        "squizlabs/php_codesniffer": "^3.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tlab\\StoryblokTransfers\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tlab\\StoryblokTransfers\\Tests\\": "tests/"
+        }
+    },
+    "bin": ["bin/generate"],
+    "scripts": {
+        "test": "phpunit",
+        "cs": "phpcs",
+        "cs-fix": "phpcbf",
+        "stan": "phpstan analyse"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

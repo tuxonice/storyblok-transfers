@@ -1,0 +1,14 @@
+{
+    "transfers": [
+        {
+            "name": "Teaser",
+            "properties": [
+                {
+                    "name": "headline",
+                    "type": "string",
+                    "nullable": true
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # These tests assert against classes generated during the test run, so
+        # the annotation is accurate at runtime but unverifiable statically.
+        -
+            identifier: varTag.nativeType
+            paths:
+                - tests/Integration/GeneratedCodeFixerTest.php
+                - tests/Integration/StoryblokTransferGeneratorTest.php

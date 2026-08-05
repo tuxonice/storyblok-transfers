@@ -1,0 +1,15 @@
+{
+    "transfers": [
+        {
+            "name": "Page",
+            "properties": [
+                {
+                    "name": "body",
+                    "type": "BlokTransfer[]",
+                    "singular": "bodyItem",
+                    "namespace": "Pixel\\StoryblokTransferGenerator\\Transfers\\BlokTransfer"
+                }
+            ]
+        }
+    ]
+}

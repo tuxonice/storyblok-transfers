@@ -1,0 +1,115 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Tlab\StoryblokTransfers\Client\StoryblokApiException;
+use Tlab\StoryblokTransfers\StoryblokTransferGenerator;
+
+// Works both inside this package and when installed into a project's vendor/.
+$autoloaders = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+];
+
+foreach ($autoloaders as $autoloader) {
+    if (is_file($autoloader)) {
+        require $autoloader;
+
+        break;
+    }
+}
+
+if (!class_exists(StoryblokTransferGenerator::class)) {
+    fwrite(STDERR, "Could not locate the Composer autoloader. Run `composer install` first.\n");
+    exit(1);
+}
+
+/**
+ * Every setting falls back to an environment variable, so custom paths never
+ * force the token onto the command line - where it would land in shell history
+ * and in the process list.
+ */
+$option = static function (?string $argument, string $envVar, ?string $default = null): ?string {
+    if ($argument !== null && $argument !== '') {
+        return $argument;
+    }
+
+    $fromEnv = getenv($envVar);
+
+    if (is_string($fromEnv) && $fromEnv !== '') {
+        return $fromEnv;
+    }
+
+    return $default;
+};
+
+$spaceId = $option($argv[1] ?? null, 'STORYBLOK_SPACE_ID');
+$token = $option($argv[2] ?? null, 'STORYBLOK_MANAGEMENT_TOKEN');
+$definitionsPath = $option($argv[3] ?? null, 'STORYBLOK_DEFINITIONS_PATH', getcwd() . '/src/dto-definitions');
+$outputPath = $option($argv[4] ?? null, 'STORYBLOK_OUTPUT_PATH', getcwd() . '/src/DataTransferObjects');
+$namespace = $option($argv[5] ?? null, 'STORYBLOK_NAMESPACE', 'App\\DataTransferObjects');
+$authorizationScheme = $option(null, 'STORYBLOK_AUTH_SCHEME', '');
+
+if ($spaceId === null || $token === null) {
+    fwrite(STDERR, <<<USAGE
+    Usage: bin/generate <space-id> <token> [definitions-path] [output-path] [namespace]
+
+    Every argument may instead be supplied as an environment variable, so you
+    never have to put the token on the command line:
+
+      space-id           STORYBLOK_SPACE_ID           (required)
+      token              STORYBLOK_MANAGEMENT_TOKEN   (required)
+      definitions-path   STORYBLOK_DEFINITIONS_PATH   ./src/dto-definitions
+      output-path        STORYBLOK_OUTPUT_PATH        ./src/DataTransferObjects
+      namespace          STORYBLOK_NAMESPACE          App\DataTransferObjects
+      -                  STORYBLOK_AUTH_SCHEME        (empty; use Bearer for
+                                                      OAuth-issued tokens)
+
+    Passing the token as an argument leaves it in your shell history and in the
+    process list - prefer the environment variable.
+
+    USAGE);
+    exit(1);
+}
+
+$generator = new StoryblokTransferGenerator(
+    spaceId: $spaceId,
+    token: $token,
+    definitionsPath: $definitionsPath,
+    outputPath: $outputPath,
+    namespace: $namespace,
+    authorizationScheme: $authorizationScheme ?? '',
+);
+
+try {
+    $result = $generator->generate();
+} catch (StoryblokApiException $e) {
+    fwrite(STDERR, 'Storyblok API error: ' . $e->getMessage() . "\n");
+    exit(1);
+} catch (Throwable $e) {
+    fwrite(STDERR, 'Generation failed: ' . $e->getMessage() . "\n");
+    exit(1);
+}
+
+foreach ($result->warnings as $warning) {
+    fwrite(STDERR, 'Warning: ' . $warning . "\n");
+}
+
+if ($result->componentNames === []) {
+    echo "No components with usable fields were found in space {$spaceId}.\n";
+    exit(0);
+}
+
+printf(
+    "Generated %d transfer %s in %s:\n",
+    count($result->componentNames),
+    count($result->componentNames) === 1 ? 'class' : 'classes',
+    $outputPath
+);
+
+foreach ($result->componentNames as $name) {
+    echo '  - ' . $name . "Transfer\n";
+}
+
+echo "Done.\n";

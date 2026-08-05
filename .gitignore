@@ -1,0 +1,13 @@
+/vendor/
+/.phpunit.cache/
+.phpunit.result.cache
+composer.phar
+
+# Local machine settings
+/.claude/settings.local.json
+.env
+
+# Generator output must never land in this library. src/DataTransferObjects is
+# bin/generate default output path, so a bare run from the repo root writes here.
+/src/DataTransferObjects/
+/src/dto-definitions/
