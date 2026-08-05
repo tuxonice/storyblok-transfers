@@ -10,5 +10,4 @@ parameters:
         -
             identifier: varTag.nativeType
             paths:
-                - tests/Integration/GeneratedCodeFixerTest.php
                 - tests/Integration/StoryblokTransferGeneratorTest.php

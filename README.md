@@ -128,7 +128,6 @@ foreach ($result->warnings as $warning) {
 |---|---|
 | `componentNames` | PascalCased names of the transfers that were generated |
 | `warnings` | Fields that had to be left out, with the reason |
-| `repairedFiles` | Generated files the post-processor had to patch (see below) |
 
 ### CLI
 
@@ -283,32 +282,6 @@ patterns:
 - consecutive capitals in the key itself (`CTA`)
 
 Rename the field in Storyblok (`headline_two`) to have it generated.
-
-### Generated code is post-processed
-
-`tuxonice/transfer-objects` emits **syntactically invalid PHP** for plain `array`
-properties. Its template appends an "add" method to every `array`-typed property,
-but a bare `array` has no element type and no singular name:
-
-```php
-private ?array $body = [] = null;   // two initialisers
-public function add( $): self       // no method name, no parameter name
-```
-
-Rather than distort the definition files — the artefact humans review — the
-definitions stay semantically correct and `GeneratedCodeFixer` repairs the
-generated classes afterwards, producing:
-
-```php
-/**
- * @var array<mixed>|null
- */
-private ?array $body = null;
-```
-
-Files it touched are listed in `GenerationResult::$repairedFiles`. The fix
-properly belongs upstream; if it lands there, this post-processing step can be
-deleted and its tests will say so.
 
 ### The output directory is cleared on every run
 

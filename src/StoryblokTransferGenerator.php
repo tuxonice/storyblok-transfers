@@ -8,7 +8,6 @@ use GuzzleHttp\ClientInterface;
 use RuntimeException;
 use Tlab\StoryblokTransfers\Client\StoryblokManagementClient;
 use Tlab\StoryblokTransfers\Definition\DefinitionFileWriter;
-use Tlab\StoryblokTransfers\Definition\GeneratedCodeFixer;
 use Tlab\StoryblokTransfers\Schema\ComponentNameFormatter;
 use Tlab\StoryblokTransfers\Schema\ComponentSchemaFetcher;
 use Tlab\StoryblokTransfers\Schema\FieldTypeMapper;
@@ -26,8 +25,6 @@ final class StoryblokTransferGenerator
     private readonly FieldTypeMapper $mapper;
 
     private readonly DefinitionFileWriter $definitionWriter;
-
-    private readonly GeneratedCodeFixer $codeFixer;
 
     private readonly ComponentNameFormatter $nameFormatter;
 
@@ -50,7 +47,6 @@ final class StoryblokTransferGenerator
         );
         $this->mapper = new FieldTypeMapper();
         $this->definitionWriter = new DefinitionFileWriter();
-        $this->codeFixer = new GeneratedCodeFixer();
         $this->nameFormatter = new ComponentNameFormatter();
     }
 
@@ -94,9 +90,7 @@ final class StoryblokTransferGenerator
 
         (new DataTransferBuilder($this->definitionsPath, $this->outputPath, $this->namespace))->build();
 
-        $repairedFiles = $this->codeFixer->fix($this->outputPath);
-
-        return new GenerationResult($componentNames, $warnings, $repairedFiles);
+        return new GenerationResult($componentNames, $warnings);
     }
 
     /**

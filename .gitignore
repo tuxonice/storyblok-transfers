@@ -2,10 +2,10 @@
 /.phpunit.cache/
 .phpunit.result.cache
 composer.phar
-.idea
 
 # Local machine settings
 /.claude/settings.local.json
+/.idea/
 .env
 
 # Generator output must never land in this library. src/DataTransferObjects is

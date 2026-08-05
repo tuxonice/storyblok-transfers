@@ -7,8 +7,8 @@ namespace Tlab\StoryblokTransfers\Tests\Fixture;
 use Tlab\TransferObjects\AbstractTransfer;
 
 /**
- * Mirrors a post-processed `array<mixed>` property - the richtext case. It has
- * no add method because GeneratedCodeFixer removes the broken one.
+ * Mirrors an `array<mixed>` property - the richtext case. A plain array has no
+ * element type, so the generator emits no add method for it.
  */
 class ScalarFixtureTransfer extends AbstractTransfer
 {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "95539bf22db9fe6db2f55453d7b48257",
+    "content-hash": "23b5d79c3d29c4307c213b0b6458f5eb",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -1056,16 +1056,16 @@
         },
         {
             "name": "tuxonice/transfer-objects",
-            "version": "v1.1.2",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tuxonice/data-transfer-object.git",
-                "reference": "b9546e091a3d96cb0062e5a56bdea038df519e95"
+                "reference": "fd260a832c7d67a132e44443e4c44c23d9722eaa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tuxonice/data-transfer-object/zipball/b9546e091a3d96cb0062e5a56bdea038df519e95",
-                "reference": "b9546e091a3d96cb0062e5a56bdea038df519e95",
+                "url": "https://api.github.com/repos/tuxonice/data-transfer-object/zipball/fd260a832c7d67a132e44443e4c44c23d9722eaa",
+                "reference": "fd260a832c7d67a132e44443e4c44c23d9722eaa",
                 "shasum": ""
             },
             "require": {
@@ -1104,9 +1104,9 @@
             ],
             "support": {
                 "issues": "https://github.com/tuxonice/data-transfer-object/issues",
-                "source": "https://github.com/tuxonice/data-transfer-object/tree/v1.1.2"
+                "source": "https://github.com/tuxonice/data-transfer-object/tree/v1.2.0"
             },
-            "time": "2024-04-05T17:49:18+00:00"
+            "time": "2026-08-06T13:24:43+00:00"
         },
         {
             "name": "twig/twig",
@@ -2858,16 +2858,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.13.5",
+            "version": "3.13.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
-                "reference": "0ca86845ce43291e8f5692c7356fccf3bcf02bf4"
+                "reference": "4c378e1a528ea066890fc2397cbdd2f94eb2fc91"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/0ca86845ce43291e8f5692c7356fccf3bcf02bf4",
-                "reference": "0ca86845ce43291e8f5692c7356fccf3bcf02bf4",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/4c378e1a528ea066890fc2397cbdd2f94eb2fc91",
+                "reference": "4c378e1a528ea066890fc2397cbdd2f94eb2fc91",
                 "shasum": ""
             },
             "require": {
@@ -2933,7 +2933,7 @@
                     "type": "thanks_dev"
                 }
             ],
-            "time": "2025-11-04T16:30:35+00:00"
+            "time": "2026-08-06T00:17:32+00:00"
         },
         {
             "name": "theseer/tokenizer",
