@@ -12,3 +12,6 @@ composer.phar
 # bin/generate default output path, so a bare run from the repo root writes here.
 /src/DataTransferObjects/
 /src/dto-definitions/
+
+# Output of tools/smoke-test.php - regenerated on every run.
+/tools/.output/

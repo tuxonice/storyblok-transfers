@@ -9,8 +9,11 @@ RUN := $(DC) run --rm php
 build:
 	$(DC) build
 
-up:
+start:
 	$(DC) up -d
+
+stop:
+	$(DC) stop
 
 down:
 	$(DC) down
