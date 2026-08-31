@@ -14,7 +14,7 @@ use Tlab\TransferObjects\AbstractTransfer;
  * by reflection. A defaultless typed property would therefore make toArray()
  * throw whenever Storyblok omits the field.
  */
-class AssetTransfer extends AbstractTransfer
+final class AssetTransfer extends AbstractTransfer
 {
     private ?int $id = null;
 

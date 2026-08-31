@@ -14,7 +14,7 @@ use Tlab\TransferObjects\AbstractTransfer;
  *
  * See AssetTransfer for why the property is nullable with a null default.
  */
-class BlokTransfer extends AbstractTransfer
+final class BlokTransfer extends AbstractTransfer
 {
     private ?string $component = null;
 
