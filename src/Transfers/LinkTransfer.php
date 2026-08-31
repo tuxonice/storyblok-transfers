@@ -14,7 +14,7 @@ use Tlab\TransferObjects\AbstractTransfer;
  * The payload key `cached_url` maps to $cachedUrl: AbstractTransfer::fromArray()
  * camel-cases incoming keys, so the snake_case key hydrates this property.
  */
-class LinkTransfer extends AbstractTransfer
+final class LinkTransfer extends AbstractTransfer
 {
     private ?string $id = null;
 
