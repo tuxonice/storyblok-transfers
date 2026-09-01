@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 
 use Tlab\StoryblokTransfers\Client\StoryblokApiException;
+use Tlab\StoryblokTransfers\Content\ContentOptions;
+use Tlab\StoryblokTransfers\Content\StoryQuery;
+use Tlab\StoryblokTransfers\Content\StoryRepository;
+use Tlab\StoryblokTransfers\Content\StoryTransfer;
+use Tlab\StoryblokTransfers\Content\UnexpectedComponentException;
+use Tlab\StoryblokTransfers\Content\UnresolvableComponentException;
+use Tlab\StoryblokTransfers\Content\Version;
 use Tlab\StoryblokTransfers\GenerationResult;
-use Tlab\StoryblokTransfers\Hydration\HydrationException;
-use Tlab\StoryblokTransfers\Hydration\StoryblokHydrator;
-use Tlab\StoryblokTransfers\Schema\ComponentNameFormatter;
 use Tlab\StoryblokTransfers\StoryblokTransferGenerator;
 
 /**
@@ -20,15 +24,27 @@ use Tlab\StoryblokTransfers\StoryblokTransferGenerator;
 final class SmokeTest
 {
     public const USAGE = <<<'USAGE'
-        Usage: php tools/smoke-test.php [story-slug-or-id]
+        Usage: php tools/smoke-test.php [story-slug]
 
-        Generates transfer classes from the Storyblok space in your .env, fetches one
-        story and hydrates it, printing the resulting graph.
+        Generates transfer classes from the Storyblok space in your .env, lists the
+        space, then reads one story through the library's own StoryRepository and
+        prints the resulting graph.
 
-        Without an argument the first non-folder story in the space is used.
+        Without an argument the first story the listing returns is used.
 
         Reads STORYBLOK_SPACE_ID, STORYBLOK_MANAGEMENT_TOKEN and STORYBLOK_AUTH_SCHEME
-        from the environment, falling back to .env in the repository root.
+        for generation, and STORYBLOK_DELIVERY_TOKEN for reading content. Set
+        STORYBLOK_SMOKE_RELATIONS to a comma-separated list of component.field pairs
+        to exercise resolve_relations.
+
+        Resolution only shows up when the story being read actually carries one of
+        those fields, so STORYBLOK_SMOKE_RELATIONS is normally paired with an
+        explicit slug argument rather than left to whichever story the default
+        listing happens to return. In this space, for example, the relation field
+        is "test.author" - it lives on the "test" component nested inside the story
+        at slug "test", not at "home", which is only the relation's target - so
+        exercising it end to end means:
+        STORYBLOK_SMOKE_RELATIONS=test.author php tools/smoke-test.php test
 
         Generated output goes to tools/.output and is git-ignored. The space is only
         ever read from.
@@ -42,7 +58,7 @@ final class SmokeTest
     public function __construct(
         private readonly Console $console,
         private readonly Configuration $configuration,
-        private readonly StoryFetcher $fetcher,
+        private readonly StoryRepository $stories,
         private readonly TransferGraphPrinter $printer,
         private readonly string $outputRoot,
         private readonly string $namespace,
@@ -52,7 +68,7 @@ final class SmokeTest
     /**
      * @throws SmokeTestFailure When any step fails.
      */
-    public function run(?string $storySlugOrId): void
+    public function run(?string $slug): void
     {
         $this->console->title('Storyblok transfers smoke test');
         $this->console->info('space ' . $this->configuration->spaceId . '  →  ' . $this->outputRoot);
@@ -60,8 +76,9 @@ final class SmokeTest
         $generation = $this->generate();
         $this->registerGeneratedClassAutoloader();
 
-        $story = $this->fetchStory($storySlugOrId);
-        $summary = $this->hydrate($story, $generation);
+        $slug ??= $this->firstSlug();
+        $story = $this->fetchStory($slug, $generation);
+        $summary = $this->inspect($story);
 
         $this->report($generation, $summary);
     }
@@ -71,7 +88,7 @@ final class SmokeTest
      */
     private function generate(): GenerationResult
     {
-        $this->console->heading('[1/3] Generating transfers from the space schemas');
+        $this->console->heading('[1/4] Generating transfers from the space schemas');
 
         $generator = new StoryblokTransferGenerator(
             spaceId: $this->configuration->spaceId,
@@ -114,73 +131,123 @@ final class SmokeTest
     }
 
     /**
+     * Also the only place the listing and its header-borne totals get exercised
+     * against the real API.
+     *
      * @throws SmokeTestFailure
      */
-    private function fetchStory(?string $storySlugOrId): Story
+    private function firstSlug(): string
     {
-        $this->console->heading('[2/3] Fetching a story');
+        $this->console->heading('[2/4] Listing stories');
 
         try {
-            $story = $this->fetcher->fetch($this->configuration->spaceId, $storySlugOrId);
+            $list = $this->stories->findBy(new StoryQuery(perPage: 1));
         } catch (StoryblokApiException $e) {
-            throw new SmokeTestFailure('Could not fetch a story: ' . $e->getMessage());
-        }
-
-        $this->console->ok(sprintf(
-            'story "%s" (slug "%s", id %s)',
-            $story->name,
-            $story->slug,
-            $story->id
-        ));
-
-        $component = $story->component();
-
-        if ($component === null) {
+            throw new SmokeTestFailure('Could not list stories: ' . $e->getMessage());
+        } catch (UnresolvableComponentException $e) {
             throw new SmokeTestFailure(
-                'The story content has no "component" key, so there is nothing to hydrate into.'
+                'The first story in the space has no generated class: ' . $e->getMessage()
             );
         }
 
-        $this->console->info('root component: ' . $component . '  (' . count($story->content) . ' keys)');
+        $this->console->ok(sprintf(
+            '%d story/stories in the space, %d per page',
+            $list->getTotal(),
+            $list->getPerPage()
+        ));
 
-        return $story;
+        $first = $list->getStories()[0] ?? null;
+
+        if ($first === null) {
+            throw new SmokeTestFailure('The space contains no stories to hydrate.');
+        }
+
+        $this->console->info('first story: ' . $first->getFullSlug());
+
+        return $first->getFullSlug();
     }
 
     /**
      * @throws SmokeTestFailure
      */
-    private function hydrate(Story $story, GenerationResult $generation): GraphSummary
+    private function fetchStory(string $slug, GenerationResult $generation): StoryTransfer
     {
-        $this->console->heading('[3/3] Hydrating');
+        $this->console->heading('[3/4] Fetching and hydrating one story');
 
-        $shortName = (new ComponentNameFormatter())->toTransferName((string) $story->component()) . 'Transfer';
-        $transferClass = rtrim($this->namespace, '\\') . '\\' . $shortName;
+        $relations = $this->relationsToResolve();
 
-        if (!class_exists($transferClass)) {
+        if ($relations !== []) {
+            $this->console->info('resolving relations: ' . implode(', ', $relations));
+        }
+
+        $options = (new ContentOptions(Version::Draft))->withResolveRelations($relations);
+
+        try {
+            $story = $this->stories->bySlug($slug, null, $options);
+        } catch (UnresolvableComponentException $e) {
             throw new SmokeTestFailure(
-                sprintf('No generated class for the root component "%s".', (string) $story->component()),
-                'Expected: ' . $transferClass,
+                'No generated class for the story\'s root component: ' . $e->getMessage(),
                 'Generated: ' . implode(', ', $generation->componentNames),
                 'A component whose every field is a tab or section generates nothing '
                 . '- that may be the cause.'
             );
-        }
-
-        $hydrator = new StoryblokHydrator($this->namespace);
-
-        try {
-            $transfer = $hydrator->hydrate($transferClass, $story->content);
-        } catch (HydrationException $e) {
-            throw new SmokeTestFailure('Hydration failed: ' . $e->getMessage());
+        } catch (UnexpectedComponentException | StoryblokApiException $e) {
+            throw new SmokeTestFailure('Could not read the story: ' . $e->getMessage());
         } catch (Throwable $e) {
-            throw new SmokeTestFailure('Hydration threw ' . $e::class . ': ' . $e->getMessage());
+            throw new SmokeTestFailure('Reading the story threw ' . $e::class . ': ' . $e->getMessage());
         }
 
-        $this->console->ok('hydrated into ' . $shortName);
+        if ($story === null) {
+            throw new SmokeTestFailure(sprintf('No story at slug "%s".', $slug));
+        }
+
+        $this->console->ok(sprintf(
+            'story "%s" (uuid %s) hydrated into %s',
+            $story->getFullSlug(),
+            $story->getUuid(),
+            $story->getContent()::class
+        ));
+
+        if ($relations !== []) {
+            $this->console->info(
+                $story->getRelations()->isEmpty()
+                    ? sprintf(
+                        'no relations came back resolved - "%s" may not carry any of: %s',
+                        $slug,
+                        implode(', ', $relations)
+                    )
+                    : 'relations resolved and reachable through getRelation()'
+            );
+        }
+
+        return $story;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function relationsToResolve(): array
+    {
+        $configured = getenv('STORYBLOK_SMOKE_RELATIONS');
+
+        if (!is_string($configured) || $configured === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $configured))));
+    }
+
+    /**
+     * @throws SmokeTestFailure
+     */
+    private function inspect(StoryTransfer $story): GraphSummary
+    {
+        $this->console->heading('[4/4] Walking the graph');
+
+        $transfer = $story->getContent();
+
         $this->console->line();
-
         $summary = $this->printer->print($transfer);
-
         $this->console->line();
 
         // The reflection-driven round trip is where a defaultless typed property

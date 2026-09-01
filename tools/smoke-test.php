@@ -5,7 +5,7 @@
  * End-to-end smoke test against a real Storyblok space.
  *
  * Usage:
- *     php tools/smoke-test.php [story-slug-or-id]
+ *     php tools/smoke-test.php [story-slug]
  *
  * Wiring only - the run itself lives in Tlab\StoryblokTransfers\Tools\SmokeTest,
  * so it can be exercised without a subprocess. Keeping this file free of symbol
@@ -14,7 +14,9 @@
 
 declare(strict_types=1);
 
-use GuzzleHttp\Client;
+use Tlab\StoryblokTransfers\Content\ContentOptions;
+use Tlab\StoryblokTransfers\Content\StoryblokContent;
+use Tlab\StoryblokTransfers\Content\Version;
 use Tlab\StoryblokTransfers\Hydration\PropertyTypeResolver;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -24,8 +26,11 @@ require_once __DIR__ . '/Configuration.php';
 require_once __DIR__ . '/DotEnvFile.php';
 require_once __DIR__ . '/GraphSummary.php';
 require_once __DIR__ . '/SmokeTest.php';
-require_once __DIR__ . '/Story.php';
-require_once __DIR__ . '/StoryFetcher.php';
+// Every failure path in this tool throws one of these, and nothing else loads
+// it: Composer's PSR-4 map covers src/ and tests/, not tools/. Without this
+// line the credential guard below - and every other check - dies with
+// "Class SmokeTestFailure not found" instead of its own message.
+require_once __DIR__ . '/SmokeTestFailure.php';
 require_once __DIR__ . '/TransferGraphPrinter.php';
 
 
@@ -45,7 +50,11 @@ try {
     $smokeTest = new SmokeTest(
         console: $console,
         configuration: $configuration,
-        fetcher: new StoryFetcher(new Client(), $configuration->authorizationHeader()),
+        stories: StoryblokContent::create(
+            deliveryToken: $configuration->deliveryToken,
+            namespace: 'SmokeTest\\DataTransferObjects',
+            defaults: new ContentOptions(Version::Draft),
+        )->stories(),
         printer: new TransferGraphPrinter($console, new PropertyTypeResolver()),
         // Never src/: the generator clears every *Transfer.php in its output
         // directory on each run.

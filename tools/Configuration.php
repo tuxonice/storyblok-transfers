@@ -11,6 +11,7 @@ final class Configuration
     public function __construct(
         public readonly string $spaceId,
         public readonly string $token,
+        public readonly string $deliveryToken,
         public readonly string $authorizationScheme = '',
     ) {
     }
@@ -38,6 +39,7 @@ final class Configuration
 
         $spaceId = $value('STORYBLOK_SPACE_ID');
         $token = $value('STORYBLOK_MANAGEMENT_TOKEN');
+        $deliveryToken = $value('STORYBLOK_DELIVERY_TOKEN');
 
         if ($spaceId === '' || $token === '') {
             throw new SmokeTestFailure(
@@ -46,17 +48,14 @@ final class Configuration
             );
         }
 
-        return new self($spaceId, $token, $value('STORYBLOK_AUTH_SCHEME'));
-    }
+        if ($deliveryToken === '') {
+            throw new SmokeTestFailure(
+                'STORYBLOK_DELIVERY_TOKEN is required: the run reads content through the Content '
+                . 'Delivery API now, which does not accept the Management API token.',
+                'Storyblok > Settings > Access Tokens gives you a preview token.'
+            );
+        }
 
-    /**
-     * A personal access token goes in bare, which is what the Management API
-     * documents; an OAuth-issued token needs its scheme.
-     */
-    public function authorizationHeader(): string
-    {
-        return $this->authorizationScheme === ''
-            ? $this->token
-            : $this->authorizationScheme . ' ' . $this->token;
+        return new self($spaceId, $token, $deliveryToken, $value('STORYBLOK_AUTH_SCHEME'));
     }
 }

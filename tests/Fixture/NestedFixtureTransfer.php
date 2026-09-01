@@ -10,7 +10,9 @@ use Tlab\TransferObjects\AbstractTransfer;
 
 /**
  * Mirrors the shape the generator emits: a nested transfer, a transfer array
- * with its add method, a scalar array, and a plain scalar.
+ * with its add method, a scalar array, a plain scalar, and a relation field -
+ * an `option`/`internal_stories` field stays a plain ?string uuid, since
+ * resolve_relations never rewrites content.
  */
 class NestedFixtureTransfer extends AbstractTransfer
 {
@@ -33,6 +35,11 @@ class NestedFixtureTransfer extends AbstractTransfer
      * @var string|null
      */
     private ?string $headline = null;
+
+    /**
+     * @var string|null
+     */
+    private ?string $author = null;
 
     public function getImage(): ?AssetTransfer
     {
@@ -104,6 +111,18 @@ class NestedFixtureTransfer extends AbstractTransfer
     public function setHeadline(?string $headline): self
     {
         $this->headline = $headline;
+
+        return $this;
+    }
+
+    public function getAuthor(): ?string
+    {
+        return $this->author;
+    }
+
+    public function setAuthor(?string $author): self
+    {
+        $this->author = $author;
 
         return $this;
     }

@@ -71,6 +71,9 @@ cp .env.example .env
 | `STORYBLOK_OUTPUT_PATH` | no | `./src/DataTransferObjects` | Where the generated classes go |
 | `STORYBLOK_NAMESPACE` | no | `App\DataTransferObjects` | Namespace of the generated classes |
 | `STORYBLOK_AUTH_SCHEME` | no | *empty* | `Bearer` for OAuth-issued tokens |
+| `STORYBLOK_DELIVERY_TOKEN` | for reading | — | Content Delivery API token, preview or public (Settings → Access Tokens) |
+| `STORYBLOK_CONTENT_BASE_URI` | no | `https://api.storyblok.com/v2/` | Region endpoint: US, AP, CA, CN spaces each have their own |
+| `STORYBLOK_DEFAULT_VERSION` | no | `published` | `draft` in preview environments |
 | `XDEBUG_MODE` | no | `off` | `off`, `coverage`, `debug`, `develop`, `trace` |
 | `DOCKER_UID` | no | `1001` | Owner of files the container writes |
 | `DOCKER_GID` | no | `1001` | Group of files the container writes |
@@ -81,7 +84,9 @@ command line would drag the token onto it too. Using the variables keeps the
 token out of your shell history and out of the process list.
 
 The token is the **Management API** token, not the preview/public Content
-Delivery token — the two are not interchangeable.
+Delivery token — the two are not interchangeable. Generating transfer classes
+uses the Management token; reading content back with `StoryblokContent` uses
+the Content Delivery token above. A project that does both needs both.
 
 Docker Compose reads `.env` automatically, so `make` targets and
 `docker compose run` pick these up; anything already exported in your shell wins
@@ -170,7 +175,7 @@ new StoryblokTransferGenerator(
 | Storyblok type | Generated PHP | Notes |
 |---|---|---|
 | `text`, `textarea`, `markdown`, `option`, `uid`, `datetime` | `?string` | `datetime` stays an ISO 8601 string |
-| `story` | `?string` | UUID only — relations are never resolved |
+| `story` | `?string` | UUID only — resolve with `resolve_relations` and read the story off the envelope (see *Reading content → Relations*) |
 | `number` | `?float` | |
 | `boolean` | `?bool` | |
 | `richtext`, `table` | `?array` | Storyblok's own node/table structure |
@@ -242,6 +247,142 @@ above, guard when iterating a `bloks` array — see
 The hydrator only throws `HydrationException`, and only for programming errors: a
 target class that does not exist or is not a transfer.
 
+## Reading content
+
+`StoryblokHydrator` takes a content array; getting that array from Storyblok is
+what this layer does.
+
+```php
+use Tlab\StoryblokTransfers\Content\StoryblokContent;
+
+$storyblok = StoryblokContent::fromEnvironment();
+
+$story = $storyblok->stories()->bySlug('blog/hello-world');
+
+if ($story === null) {
+    // No story at that slug. A 404 is an answer, not an exception.
+}
+
+echo $story->getFullSlug(), ' ', $story->getPublishedAt();
+$content = $story->getContent();
+```
+
+`bySlug()` infers the transfer class from the story's own `component`, which is
+what a router needs — it holds a slug and cannot know the content type before it
+sees the response. A caller that does know passes it and gets it back typed:
+
+```php
+$story = $storyblok->stories()->bySlug('home', PageTransfer::class);
+$story->getContent()->getTitle();   // PageTransfer, statically
+```
+
+A declared class that does not match the story's component throws
+`UnexpectedComponentException`, naming the component that arrived.
+
+### Listings
+
+```php
+use Tlab\StoryblokTransfers\Content\StoryQuery;
+
+$list = $storyblok->stories()->findBy(new StoryQuery(
+    startsWith: 'blog/',
+    sortBy: 'published_at:desc',
+    perPage: 10,
+));
+
+echo $list->getTotal();          // across every page
+
+foreach ($list as $story) {
+    echo $story->getFullSlug();
+}
+```
+
+A query that matches nothing returns an empty list, never null.
+
+### Draft content and options
+
+```php
+use Tlab\StoryblokTransfers\Content\ContentOptions;
+use Tlab\StoryblokTransfers\Content\Version;
+
+$options = (new ContentOptions(Version::Draft))->withLanguage('de');
+
+$story = $storyblok->stories()->bySlug('home', null, $options);
+```
+
+### Relations
+
+Pass the fields to resolve, then reach the resolved story through the envelope.
+The generated property keeps its uuid:
+
+```php
+$options = (new ContentOptions())->withResolveRelations(['page.author']);
+$story = $storyblok->stories()->bySlug('home', null, $options);
+
+$author = $story->getRelation($story->getContent()->getAuthor());
+```
+
+### Links and datasources
+
+```php
+foreach ($storyblok->links()->all('blog/') as $link) {
+    echo $link->getRealPath(), $link->isFolder() ? ' (folder)' : '';
+}
+
+foreach ($storyblok->datasources()->entries('categories', 'de') as $entry) {
+    echo $entry->getName(), ' => ', $entry->getValue();
+}
+```
+
+### Caching
+
+The package ships no cache. `StoryblokContentClient` implements `ContentClient`,
+so a decorator wraps that one method. The query maps the repositories build are
+deterministic — `ContentOptions::toQuery()` and `StoryQuery::toQuery()` emit
+their keys in a fixed order — so a decorator gets a stable key. Sort the map
+yourself anyway: your decorator sees the query before the client does, and a
+hand-built query, or a future reordering inside those value objects, would
+otherwise double your cache entries.
+
+```php
+use Tlab\StoryblokTransfers\Client\ContentClient;
+use Tlab\StoryblokTransfers\Client\ContentResponse;
+
+final class CachingContentClient implements ContentClient
+{
+    public function __construct(
+        private readonly ContentClient $inner,
+        private readonly YourCache $cache,
+    ) {
+    }
+
+    public function get(string $path, array $query): ContentResponse
+    {
+        ksort($query);
+
+        $key = 'sb-' . hash('xxh3', $path . '?' . http_build_query($query));
+
+        return $this->cache->remember($key, fn () => $this->inner->get($path, $query));
+    }
+}
+
+$storyblok = StoryblokContent::usingClient(
+    new CachingContentClient($inner, $cache),
+    'App\\DataTransferObjects',
+);
+```
+
+Cache the raw response rather than hydrated transfers: a cache holding transfers
+keeps the class shape from before the last regeneration, and fails in ways that
+are hard to trace.
+
+The client sorts the query too, but one layer further down — after your
+decorator has already computed its key. That sort is for whatever keys on the
+URI rather than on the call: a CDN, a forward proxy, an HTTP cache.
+
+`cv` is exposed on `ContentOptions` but never managed for you — deciding when it
+changes is the invalidation policy, and that belongs to your application.
+
 ## Limitations
 
 These are real constraints, not oversights. Each is pinned by a test.
@@ -294,6 +435,22 @@ Rename the field in Storyblok (`headline_two`) to have it generated.
 Deleting a component in Storyblok does not remove its definition file, so its
 class keeps being generated. Delete the definition JSON by hand when a component
 goes away.
+
+### Relation resolution is one level deep
+
+`resolve_relations` brings back the stories a field points at, but not the
+stories *those* point at. Ask for the second level with a second call.
+
+### Reaching a relation needs the envelope
+
+`getRelation()` lives on `StoryTransfer`, but the uuid that keys it sits on a
+blok that may be deep inside the content. A component rendering itself in
+isolation therefore cannot resolve its own relations — pass the envelope, or
+resolve before you descend.
+
+This is the same roughness `RichtextTransfer` has with its embedded bloks, and
+it is the price of keeping the generated property a plain `?string`: the
+alternative changes every generated class.
 
 ## Development
 
