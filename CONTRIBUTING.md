@@ -32,6 +32,16 @@ dependencies, plus once on PHP 8.3 with the oldest versions `composer.json`
 allows; PHPStan, phpcs and `composer validate --strict` once, on PHP 8.3. The
 smoke test is not part of CI, since it needs a real space and tokens.
 
+## Changelog
+
+Add a line under *Unreleased* in `CHANGELOG.md` for anything a user of the
+package would notice. Mark breaking changes clearly: a squash merge on GitHub
+keeps only the pull request title, so a `!` in a commit message doesn't survive
+into the history.
+
+Security problems go through the private reporting described in
+[SECURITY.md](SECURITY.md), not through issues.
+
 ## Smoke test against a real space
 
 The unit and integration tests run against recorded responses. To check the

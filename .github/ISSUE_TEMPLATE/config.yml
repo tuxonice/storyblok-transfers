@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/tuxonice/storyblok-transfers/tree/main/documentation
+    about: Getting started, guides, and the configuration and errors reference.
+  - name: Report a security problem
+    url: https://github.com/tuxonice/storyblok-transfers/security/advisories/new
+    about: Please report vulnerabilities privately, not as an issue.
