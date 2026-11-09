@@ -30,7 +30,8 @@ final class SmokeTest
         space, then reads one story through the library's own StoryRepository and
         prints the resulting graph.
 
-        Without an argument the first story the listing returns is used.
+        Without an argument the first story on the listing's first page that
+        hydrates is used; stories with no generated class are skipped and reported.
 
         Reads STORYBLOK_SPACE_ID, STORYBLOK_MANAGEMENT_TOKEN and STORYBLOK_AUTH_SCHEME
         for generation, and STORYBLOK_DELIVERY_TOKEN for reading content. Set
