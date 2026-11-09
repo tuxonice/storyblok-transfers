@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to the same branch or pull request supersedes the run in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (PHP ${{ matrix.php }}, ${{ matrix.dependencies }} deps)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every version composer.json's "php": "^8.3" admits, against the newest
+        # dependencies a user installing today would get.
+        php: ['8.3', '8.4', '8.5']
+        dependencies: [highest]
+        include:
+          # And the oldest combination the constraints allow, so a range like
+          # guzzlehttp/guzzle ^7.0 cannot quietly start depending on something
+          # newer than it promises.
+          - php: '8.3'
+            dependencies: lowest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: ${{ matrix.dependencies }}
+
+      # The unit and integration suites run against recorded responses only;
+      # nothing here talks to Storyblok or needs a token.
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --no-progress
+
+  static-analysis:
+    name: Static analysis and coding standard
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          # The lowest supported version, and the one the Docker environment
+          # uses, so CI and `make stan` agree.
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+          # The 128M default is not enough for PHPStan; the Dockerfile raises
+          # it for the same reason.
+          ini-values: memory_limit=512M
+
+      - uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: locked
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
+
+      - name: Run PHP_CodeSniffer
+        run: vendor/bin/phpcs
