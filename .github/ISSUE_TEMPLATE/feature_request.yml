@@ -1,0 +1,23 @@
+name: Feature request
+description: Something the package should do but doesn't.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you're trying to do
+      description: The task, and where the package gets in the way or falls short.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help
+      description: How you'd like it to work. Code you'd like to be able to write is welcome.
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you do today
+      description: Any workaround you're using now.

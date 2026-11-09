@@ -1,6 +1,8 @@
 # Storyblok Transfers
 
 [![CI](https://github.com/tuxonice/storyblok-transfers/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tuxonice/storyblok-transfers/actions/workflows/ci.yml)
+[![PHP](https://img.shields.io/badge/php-%5E8.3-777BB4?logo=php&logoColor=white)](composer.json)
+[![License](https://img.shields.io/github/license/tuxonice/storyblok-transfers)](LICENSE)
 
 Typed PHP objects for your Storyblok content, in any framework.
 
@@ -59,7 +61,8 @@ through this from an empty project.
   [field types](documentation/reference/field-types.md),
   [errors](documentation/reference/errors.md)
 
-Working on the package itself? See [CONTRIBUTING.md](CONTRIBUTING.md).
+What's changed: [CHANGELOG.md](CHANGELOG.md). Working on the package itself? See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
