@@ -9,7 +9,7 @@ Storyblok space, and a story read from Storyblok into one of them.
 composer require tuxonice/storyblok-transfers
 ```
 
-PHP 8.1 or newer.
+PHP 8.3 or newer.
 
 ## 2. Get your two tokens
 

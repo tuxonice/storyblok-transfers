@@ -11,8 +11,7 @@ namespace Tlab\StoryblokTransfers\Content;
  * per language - so they live here rather than inside StoryQuery, which
  * composes this.
  *
- * Immutable through withers rather than `readonly class`, which is PHP 8.2 while
- * this library supports 8.1.
+ * Immutable: every with...() returns a new instance.
  */
 final class ContentOptions
 {
