@@ -1,9 +1,23 @@
 {
     "name": "tuxonice/storyblok-transfers",
-    "description": "Generate and hydrate PHP Transfer Objects from Storyblok component schemas",
+    "description": "Generate PHP transfer objects from your Storyblok components, and read stories from the Content Delivery API straight into them",
     "type": "library",
     "license": "MIT",
-    "keywords": ["storyblok", "dto", "transfer-objects", "codegen"],
+    "keywords": ["storyblok", "cms", "headless", "content-delivery-api", "dto", "transfer-objects", "codegen"],
+    "homepage": "https://github.com/tuxonice/storyblok-transfers",
+    "authors": [
+        {
+            "name": "Helder Correia",
+            "email": "tuxboy@tlab.pt",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/tuxonice/storyblok-transfers/issues",
+        "source": "https://github.com/tuxonice/storyblok-transfers",
+        "docs": "https://github.com/tuxonice/storyblok-transfers/tree/main/documentation",
+        "security": "https://github.com/tuxonice/storyblok-transfers/security/policy"
+    },
     "require": {
         "php": "^8.3",
         "ext-json": "*",

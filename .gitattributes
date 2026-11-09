@@ -1,0 +1,23 @@
+# Normalise line endings in the repository.
+* text=auto eol=lf
+
+# Left out of the archive Composer downloads, so installing the package brings
+# only what an application uses: src/, bin/, the documentation, README, LICENSE
+# and CHANGELOG. Everything below is for working on the package itself.
+/.github             export-ignore
+/docs                export-ignore
+/tests               export-ignore
+/tools               export-ignore
+/.dockerignore       export-ignore
+/.editorconfig       export-ignore
+/.env.example        export-ignore
+/.gitattributes      export-ignore
+/.gitignore          export-ignore
+/CONTRIBUTING.md     export-ignore
+/Dockerfile          export-ignore
+/Makefile            export-ignore
+/composer.lock       export-ignore
+/docker-compose.yml  export-ignore
+/phpcs.xml           export-ignore
+/phpstan.neon        export-ignore
+/phpunit.xml         export-ignore
