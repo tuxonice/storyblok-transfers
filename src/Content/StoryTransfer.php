@@ -18,9 +18,6 @@ use Tlab\TransferObjects\AbstractTransfer;
  * default does not apply, and uuid, slug, fullSlug and content can be what the
  * CDA guarantees they are: present.
  *
- * `final class` with promoted private readonly properties rather than
- * `readonly class`, which is PHP 8.2 while this library supports 8.1.
- *
  * Getters rather than public properties: every other transfer in the package
  * reads that way, and `@return T` on a method is the generic form PHPStan
  * handles most reliably.

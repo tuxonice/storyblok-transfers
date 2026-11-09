@@ -26,6 +26,12 @@ make shell             # a shell in the container
 
 All three of `test`, `stan` and `cs` must pass before a change is merged.
 
+GitHub Actions runs them on every push to `main` and every pull request
+(`.github/workflows/ci.yml`): the tests on PHP 8.3 to 8.5 with the newest
+dependencies, plus once on PHP 8.3 with the oldest versions `composer.json`
+allows; PHPStan, phpcs and `composer validate --strict` once, on PHP 8.3. The
+smoke test is not part of CI, since it needs a real space and tokens.
+
 ## Smoke test against a real space
 
 The unit and integration tests run against recorded responses. To check the

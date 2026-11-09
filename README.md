@@ -17,7 +17,7 @@ Storyblok story ──read──────▶ $story->getContent()  // PageTra
 composer require tuxonice/storyblok-transfers
 ```
 
-Requires PHP 8.1+.
+Requires PHP 8.3+.
 
 ## In short
 

@@ -5,7 +5,7 @@
     "license": "MIT",
     "keywords": ["storyblok", "dto", "transfer-objects", "codegen"],
     "require": {
-        "php": "^8.1",
+        "php": "^8.3",
         "ext-json": "*",
         "tuxonice/transfer-objects": "^1.2",
         "guzzlehttp/guzzle": "^7.0"
