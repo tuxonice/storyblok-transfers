@@ -13,6 +13,8 @@ final class Configuration
         public readonly string $token,
         public readonly string $deliveryToken,
         public readonly string $authorizationScheme = '',
+        public readonly ?string $managementBaseUri = null,
+        public readonly ?string $contentBaseUri = null,
     ) {
     }
 
@@ -56,6 +58,16 @@ final class Configuration
             );
         }
 
-        return new self($spaceId, $token, $deliveryToken, $value('STORYBLOK_AUTH_SCHEME'));
+        // Null when unset, so the library's own EU defaults apply.
+        $orNull = static fn (string $key): ?string => $value($key) === '' ? null : $value($key);
+
+        return new self(
+            $spaceId,
+            $token,
+            $deliveryToken,
+            $value('STORYBLOK_AUTH_SCHEME'),
+            $orNull('STORYBLOK_MANAGEMENT_BASE_URI'),
+            $orNull('STORYBLOK_CONTENT_BASE_URI'),
+        );
     }
 }

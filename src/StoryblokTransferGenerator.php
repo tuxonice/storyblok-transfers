@@ -28,6 +28,13 @@ final class StoryblokTransferGenerator
 
     private readonly ComponentNameFormatter $nameFormatter;
 
+    /**
+     * @param string $authorizationScheme 'Bearer' for OAuth-issued tokens;
+     *                                    personal access tokens go bare.
+     * @param string $managementBaseUri The Management API endpoint for the
+     *        region the space is in. EU by default; US, CA, AP and CN spaces
+     *        each have their own.
+     */
     public function __construct(
         private readonly string $spaceId,
         string $token,
@@ -36,12 +43,13 @@ final class StoryblokTransferGenerator
         private readonly string $namespace,
         ?ClientInterface $httpClient = null,
         string $authorizationScheme = '',
+        string $managementBaseUri = StoryblokManagementClient::DEFAULT_BASE_URI,
     ) {
         $this->fetcher = new ComponentSchemaFetcher(
             new StoryblokManagementClient(
                 $token,
                 $httpClient,
-                StoryblokManagementClient::DEFAULT_BASE_URI,
+                $managementBaseUri,
                 $authorizationScheme,
             )
         );

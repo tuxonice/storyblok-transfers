@@ -54,6 +54,7 @@ try {
             deliveryToken: $configuration->deliveryToken,
             namespace: 'SmokeTest\\DataTransferObjects',
             defaults: new ContentOptions(Version::Draft),
+            baseUri: $configuration->contentBaseUri,
         )->stories(),
         printer: new TransferGraphPrinter($console, new PropertyTypeResolver()),
         // Never src/: the generator clears every *Transfer.php in its output

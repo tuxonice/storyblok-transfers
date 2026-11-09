@@ -66,6 +66,38 @@ final class StoryblokManagementClientTest extends TestCase
         $client->getComponents('1');
     }
 
+    public function testHonoursACustomBaseUriForOtherRegions(): void
+    {
+        $client = $this->clientReturning(
+            [new Response(200, [], '{"components":[]}')],
+            baseUri: 'https://api-us.storyblok.com/v1/'
+        );
+
+        $client->getComponents('42');
+
+        self::assertSame(
+            'https://api-us.storyblok.com/v1/spaces/42/components/',
+            (string) $this->sentRequests[0]->getUri()
+        );
+    }
+
+    public function testNamesTheRegionAsAPossibleCauseOfA404(): void
+    {
+        // A space asked for on another region's host gets the same 404 as a
+        // space ID that does not exist.
+        $client = $this->clientReturning([new Response(404, [], '["This record could not be found"]')]);
+
+        try {
+            $client->getComponents('42');
+            self::fail('Expected the client to throw.');
+        } catch (StoryblokApiException $e) {
+            self::assertStringContainsString('404', $e->getMessage());
+            self::assertStringContainsString('space ID', $e->getMessage());
+            self::assertStringContainsString(StoryblokManagementClient::DEFAULT_BASE_URI, $e->getMessage());
+            self::assertStringContainsString('region', $e->getMessage());
+        }
+    }
+
     public function testThrowsWhenTheResponseIsNotJson(): void
     {
         $client = $this->clientReturning([new Response(200, [], 'not json at all')]);
@@ -89,12 +121,15 @@ final class StoryblokManagementClientTest extends TestCase
     /**
      * @param list<Response> $responses
      */
-    private function clientReturning(array $responses, string $token = 'test-token'): StoryblokManagementClient
-    {
+    private function clientReturning(
+        array $responses,
+        string $token = 'test-token',
+        string $baseUri = StoryblokManagementClient::DEFAULT_BASE_URI,
+    ): StoryblokManagementClient {
         $stack = HandlerStack::create(new MockHandler($responses));
         $stack->push($this->requestRecorder());
 
-        return new StoryblokManagementClient($token, new Client(['handler' => $stack]));
+        return new StoryblokManagementClient($token, new Client(['handler' => $stack]), $baseUri);
     }
 
     /**

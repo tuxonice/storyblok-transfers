@@ -17,6 +17,7 @@ Read by `vendor/bin/generate`.
 | `STORYBLOK_OUTPUT_PATH` | no | `./src/DataTransferObjects` | Where the PHP classes are written. **Cleared on every run** |
 | `STORYBLOK_NAMESPACE` | no | `App\DataTransferObjects` | Namespace of the generated classes |
 | `STORYBLOK_AUTH_SCHEME` | no | empty | `Bearer` for tokens issued through Storyblok's OAuth flow |
+| `STORYBLOK_MANAGEMENT_BASE_URI` | no | `https://mapi.storyblok.com/v1/` | Your region's Management API endpoint; see below |
 
 ### Reading content
 
@@ -39,20 +40,24 @@ running app only needs the delivery token.
 
 ## Regions
 
-Each Storyblok region has its own endpoint. Set `STORYBLOK_CONTENT_BASE_URI`
-(or pass `baseUri:` to `StoryblokContent::create()`) for a space outside the EU:
+Each Storyblok region has its own endpoints, one for generating classes and one
+for reading content. For a space outside the EU, set both:
 
-| Region | `STORYBLOK_CONTENT_BASE_URI` |
-|---|---|
-| EU (default) | `https://api.storyblok.com/v2/` |
-| US | `https://api-us.storyblok.com/v2/` |
-| Canada | `https://api-ca.storyblok.com/v2/` |
-| Australia | `https://api-ap.storyblok.com/v2/` |
-| China | `https://app.storyblokchina.cn/v2/` |
+| Region | `STORYBLOK_MANAGEMENT_BASE_URI` | `STORYBLOK_CONTENT_BASE_URI` |
+|---|---|---|
+| EU (default) | `https://mapi.storyblok.com/v1/` | `https://api.storyblok.com/v2/` |
+| US | `https://api-us.storyblok.com/v1/` | `https://api-us.storyblok.com/v2/` |
+| Canada | `https://api-ca.storyblok.com/v1/` | `https://api-ca.storyblok.com/v2/` |
+| Australia | `https://api-ap.storyblok.com/v1/` | `https://api-ap.storyblok.com/v2/` |
+| China | `https://app.storyblokchina.cn/v1/` | `https://app.storyblokchina.cn/v2/` |
 
-The address must end in `/v2/` (or `/v2`). Anything else is rejected when the
-client is created: with a wrong path, Storyblok answers every request as if the
-story didn't exist, so every page would quietly become a 404.
+In PHP, pass `managementBaseUri:` to `StoryblokTransferGenerator` and `baseUri:`
+to `StoryblokContent::create()`.
 
-Generating classes works for EU spaces only for now. See
-[Limitations](../limitations.md#generation-only-works-for-eu-spaces).
+**If generation fails with a 404**, the region is the likely cause: Storyblok
+answers a space asked for on the wrong region's endpoint exactly as it answers a
+space ID that doesn't exist. The error message names both.
+
+**The content address must end in `/v2/`** (or `/v2`). Anything else is rejected
+when the client is created: with a wrong path, Storyblok answers every request as
+if the story didn't exist, so every page would quietly become a 404.

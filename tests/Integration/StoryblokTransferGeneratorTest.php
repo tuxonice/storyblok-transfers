@@ -7,8 +7,10 @@ namespace Tlab\StoryblokTransfers\Tests\Integration;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
 use Tlab\StoryblokTransfers\StoryblokTransferGenerator;
 use Tlab\StoryblokTransfers\Tests\TempDirectory;
 
@@ -234,6 +236,32 @@ final class StoryblokTransferGeneratorTest extends TestCase
         $this->expectException(\TypeError::class);
 
         $class::fromArray(['image' => ['id' => 1, 'filename' => 'a.jpg']]);
+    }
+
+    public function testAsksTheManagementApiOfTheConfiguredRegion(): void
+    {
+        $sent = null;
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, [], (string) json_encode(['components' => []])),
+        ]));
+        $stack->push(Middleware::mapRequest(static function (RequestInterface $request) use (&$sent) {
+            $sent = $request;
+
+            return $request;
+        }));
+
+        (new StoryblokTransferGenerator(
+            spaceId: '42',
+            token: 'token',
+            definitionsPath: $this->definitionsPath,
+            outputPath: $this->outputPath,
+            namespace: 'App\\DataTransferObjects',
+            httpClient: new Client(['handler' => $stack]),
+            managementBaseUri: 'https://api-ap.storyblok.com/v1/',
+        ))->generate();
+
+        self::assertInstanceOf(RequestInterface::class, $sent);
+        self::assertSame('https://api-ap.storyblok.com/v1/spaces/42/components/', (string) $sent->getUri());
     }
 
     /**

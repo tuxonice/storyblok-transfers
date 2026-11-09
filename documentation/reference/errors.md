@@ -50,7 +50,7 @@ deployment fails at startup rather than on the first page view.
 
 | Situation | Result |
 |---|---|
-| Bad token, wrong space ID, or another Management API error | `StoryblokApiException` |
+| Bad token, wrong space ID, wrong region, or another Management API error | `StoryblokApiException` |
 | A field that can't be generated | left out, and reported in `GenerationResult::$warnings` |
 | An output directory that can't be created, or a file that can't be written | `RuntimeException` |
 

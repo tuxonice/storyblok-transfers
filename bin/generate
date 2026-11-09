@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 use Tlab\StoryblokTransfers\Client\StoryblokApiException;
+use Tlab\StoryblokTransfers\Client\StoryblokManagementClient;
 use Tlab\StoryblokTransfers\StoryblokTransferGenerator;
 
 // Works both inside this package and when installed into a project's vendor/.
@@ -50,6 +51,11 @@ $definitionsPath = $option($argv[3] ?? null, 'STORYBLOK_DEFINITIONS_PATH', getcw
 $outputPath = $option($argv[4] ?? null, 'STORYBLOK_OUTPUT_PATH', getcwd() . '/src/DataTransferObjects');
 $namespace = $option($argv[5] ?? null, 'STORYBLOK_NAMESPACE', 'App\\DataTransferObjects');
 $authorizationScheme = $option(null, 'STORYBLOK_AUTH_SCHEME', '');
+$managementBaseUri = $option(
+    null,
+    'STORYBLOK_MANAGEMENT_BASE_URI',
+    StoryblokManagementClient::DEFAULT_BASE_URI
+);
 
 if ($spaceId === null || $token === null) {
     fwrite(STDERR, <<<USAGE
@@ -65,6 +71,10 @@ if ($spaceId === null || $token === null) {
       namespace          STORYBLOK_NAMESPACE          App\DataTransferObjects
       -                  STORYBLOK_AUTH_SCHEME        (empty; use Bearer for
                                                       OAuth-issued tokens)
+      -                  STORYBLOK_MANAGEMENT_BASE_URI
+                                                      https://mapi.storyblok.com/v1/
+                                                      (EU; set your region's for
+                                                      US, CA, AP or CN spaces)
 
     Passing the token as an argument leaves it in your shell history and in the
     process list - prefer the environment variable.
@@ -80,6 +90,7 @@ $generator = new StoryblokTransferGenerator(
     outputPath: $outputPath,
     namespace: $namespace,
     authorizationScheme: $authorizationScheme ?? '',
+    managementBaseUri: $managementBaseUri ?? StoryblokManagementClient::DEFAULT_BASE_URI,
 );
 
 try {

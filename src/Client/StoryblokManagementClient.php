@@ -21,6 +21,8 @@ final class StoryblokManagementClient
 
     /**
      * @param string $token A Storyblok personal access token.
+     * @param string $baseUri Region endpoint. The default is the EU one; the US,
+     *                        CA, AP and CN spaces each have their own host.
      * @param string $authorizationScheme Prefix for the Authorization header.
      *                                    Personal access tokens are sent bare,
      *                                    which is what the Management API
@@ -115,6 +117,17 @@ final class StoryblokManagementClient
 
         if ($status >= 200 && $status < 300) {
             return;
+        }
+
+        // A space asked for on another region's host gets the same 404 as a
+        // space ID that does not exist, so the message names both causes.
+        if ($status === 404) {
+            throw new StoryblokApiException(sprintf(
+                'Storyblok Management API returned HTTP 404 for %s. Check the space ID, and that %s is the '
+                . 'Management API endpoint for the region your space is in.',
+                $uri,
+                $this->baseUri
+            ));
         }
 
         throw new StoryblokApiException(

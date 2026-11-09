@@ -2,15 +2,6 @@
 
 Known rough edges, and what to do about each.
 
-## Generation only works for EU spaces
-
-The generator always calls the EU Management API (`mapi.storyblok.com`), and
-neither the command nor `StoryblokTransferGenerator` lets you change it. A space
-in the US, Canada, Australia or China can't generate classes yet.
-
-Reading content is not affected: set `STORYBLOK_CONTENT_BASE_URI` for your
-region (see [Configuration](reference/configuration.md#regions)).
-
 ## `bloks` hold more than their declared type says
 
 `bloks` properties are declared as a list of `BlokTransfer`, but the hydrator

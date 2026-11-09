@@ -28,6 +28,7 @@ It reads its settings from the environment:
 | `STORYBLOK_OUTPUT_PATH` | `./src/DataTransferObjects` |
 | `STORYBLOK_NAMESPACE` | `App\DataTransferObjects` |
 | `STORYBLOK_AUTH_SCHEME` | empty; set `Bearer` for OAuth-issued tokens |
+| `STORYBLOK_MANAGEMENT_BASE_URI` | EU; see [Regions](reference/configuration.md#regions) for the others |
 
 Relative paths are resolved from the directory you run the command in. Both
 directories are created if they don't exist.
@@ -72,6 +73,16 @@ foreach ($result->warnings as $warning) {
 Pass `authorizationScheme: 'Bearer'` if your token was issued through
 Storyblok's OAuth flow. Personal access tokens are sent as they are, which is
 the default.
+
+For a space outside the EU, pass your region's endpoint (see
+[Regions](reference/configuration.md#regions)):
+
+```php
+$generator = new StoryblokTransferGenerator(
+    // …
+    managementBaseUri: 'https://api-us.storyblok.com/v1/',
+);
+```
 
 ## What gets written
 

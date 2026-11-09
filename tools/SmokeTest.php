@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 
 use Tlab\StoryblokTransfers\Client\StoryblokApiException;
+use Tlab\StoryblokTransfers\Client\StoryblokManagementClient;
 use Tlab\StoryblokTransfers\Content\ContentOptions;
 use Tlab\StoryblokTransfers\Content\StoryQuery;
 use Tlab\StoryblokTransfers\Content\StoryRepository;
@@ -33,8 +34,9 @@ final class SmokeTest
         Without an argument the first story on the listing's first page that
         hydrates is used; stories with no generated class are skipped and reported.
 
-        Reads STORYBLOK_SPACE_ID, STORYBLOK_MANAGEMENT_TOKEN and STORYBLOK_AUTH_SCHEME
-        for generation, and STORYBLOK_DELIVERY_TOKEN for reading content. Set
+        Reads STORYBLOK_SPACE_ID, STORYBLOK_MANAGEMENT_TOKEN, STORYBLOK_AUTH_SCHEME and
+        STORYBLOK_MANAGEMENT_BASE_URI for generation, and STORYBLOK_DELIVERY_TOKEN and
+        STORYBLOK_CONTENT_BASE_URI for reading content. Set
         STORYBLOK_SMOKE_RELATIONS to a comma-separated list of component.field pairs
         to exercise resolve_relations.
 
@@ -103,6 +105,8 @@ final class SmokeTest
             outputPath: $this->transfersPath(),
             namespace: $this->namespace,
             authorizationScheme: $this->configuration->authorizationScheme,
+            managementBaseUri: $this->configuration->managementBaseUri
+                ?? StoryblokManagementClient::DEFAULT_BASE_URI,
         );
 
         try {
