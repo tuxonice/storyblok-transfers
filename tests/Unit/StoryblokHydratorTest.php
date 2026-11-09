@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tlab\StoryblokTransfers\Tests\Unit;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Tlab\StoryblokTransfers\Hydration\ComponentClassResolver;
 use Tlab\StoryblokTransfers\Hydration\HydrationException;
 use Tlab\StoryblokTransfers\Hydration\StoryblokHydrator;
 use Tlab\StoryblokTransfers\Tests\Fixture\NestedFixtureTransfer;
@@ -19,6 +21,31 @@ final class StoryblokHydratorTest extends TestCase
     {
         // Fixture transfers double as the "generated" namespace here.
         $this->hydrator = new StoryblokHydrator('Tlab\\StoryblokTransfers\\Tests\\Fixture');
+    }
+
+    public function testRejectsAResolverForADifferentNamespace(): void
+    {
+        // Otherwise nested bloks are looked up somewhere the caller never
+        // configured, and quietly degrade to raw arrays.
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Other\\\\Ns/');
+
+        new StoryblokHydrator('App\\Dto', new ComponentClassResolver('Other\\Ns'));
+    }
+
+    public function testAcceptsAResolverForTheSameNamespaceSpelledWithATrailingSeparator(): void
+    {
+        $hydrator = new StoryblokHydrator(
+            'Tlab\\StoryblokTransfers\\Tests\\Fixture\\',
+            new ComponentClassResolver('Tlab\\StoryblokTransfers\\Tests\\Fixture'),
+        );
+
+        $transfer = $hydrator->hydrate(NestedFixtureTransfer::class, [
+            'body' => [['component' => 'scalar_fixture']],
+        ]);
+
+        self::assertInstanceOf(NestedFixtureTransfer::class, $transfer);
+        self::assertInstanceOf(ScalarFixtureTransfer::class, $transfer->getBody()[0]);
     }
 
     public function testHydratesANestedAssetIntoATransfer(): void
