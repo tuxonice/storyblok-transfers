@@ -63,4 +63,4 @@ Working on the package itself? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
