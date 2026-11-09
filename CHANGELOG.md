@@ -7,7 +7,9 @@ the package uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Nothing has been released yet. Everything below will make up the first release.
+## [0.1.0] - 2026-11-09
+
+The first release.
 
 ### Added
 
@@ -33,12 +35,14 @@ Nothing has been released yet. Everything below will make up the first release.
   region, through `STORYBLOK_MANAGEMENT_BASE_URI` and
   `STORYBLOK_CONTENT_BASE_URI`.
 - **Documentation** in `documentation/`, starting with a getting-started guide.
+- Works with **Guzzle 7 or 8**.
 
-### Notes for the first release
+### Notes
 
 - Requires **PHP 8.3** or newer.
 - `RichtextTransfer` ships with the package but is not yet used by the generator
   or the hydrator; rich text fields still arrive as arrays. See
   [Limitations](documentation/limitations.md#rich-text-is-a-raw-array).
 
-[Unreleased]: https://github.com/tuxonice/storyblok-transfers/commits/main
+[Unreleased]: https://github.com/tuxonice/storyblok-transfers/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/tuxonice/storyblok-transfers/releases/tag/v0.1.0
