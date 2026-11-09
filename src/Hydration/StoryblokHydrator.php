@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tlab\StoryblokTransfers\Hydration;
 
-use Tlab\StoryblokTransfers\Schema\ComponentNameFormatter;
+use InvalidArgumentException;
 use Tlab\StoryblokTransfers\Schema\PropertyNameNormalizer;
 use Tlab\StoryblokTransfers\Transfers\BlokTransfer;
 use Tlab\TransferObjects\AbstractTransfer;
@@ -23,18 +23,38 @@ final class StoryblokHydrator
 
     private readonly PropertyNameNormalizer $nameNormalizer;
 
-    private readonly ComponentNameFormatter $componentNameFormatter;
+    private readonly ComponentClassResolver $componentClassResolver;
 
     /**
      * @param string $namespace Namespace the generated transfers live in,
      *                          e.g. 'App\DataTransferObjects'.
+     * @param ComponentClassResolver|null $componentClassResolver To share one
+     *        resolver with the content layer. It must resolve into $namespace:
+     *        were the two allowed to differ, nested bloks would be looked up
+     *        somewhere the caller never configured and quietly stay raw arrays.
+     *
+     * @throws InvalidArgumentException When the resolver's namespace differs.
      */
     public function __construct(
-        private readonly string $namespace,
+        string $namespace,
+        ?ComponentClassResolver $componentClassResolver = null,
     ) {
+        if (
+            $componentClassResolver !== null
+            && $componentClassResolver->getNamespace() !== rtrim($namespace, '\\')
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'The ComponentClassResolver resolves into %s, but the hydrator was given %s. Both must name '
+                . 'the namespace the generated transfers live in.',
+                $componentClassResolver->getNamespace(),
+                $namespace
+            ));
+        }
+
         $this->typeResolver = new PropertyTypeResolver();
         $this->nameNormalizer = new PropertyNameNormalizer();
-        $this->componentNameFormatter = new ComponentNameFormatter();
+        $this->componentClassResolver = $componentClassResolver
+            ?? new ComponentClassResolver($namespace);
     }
 
     /**
@@ -107,20 +127,7 @@ final class StoryblokHydrator
      */
     private function resolveComponentClass(array $blok): ?string
     {
-        $component = $blok['component'] ?? null;
-
-        if (!is_string($component) || $component === '') {
-            return null;
-        }
-
-        $candidate = rtrim($this->namespace, '\\') . '\\'
-            . $this->componentNameFormatter->toTransferName($component) . 'Transfer';
-
-        if (!class_exists($candidate) || !is_subclass_of($candidate, AbstractTransfer::class)) {
-            return null;
-        }
-
-        return $candidate;
+        return $this->componentClassResolver->resolveFromContent($blok);
     }
 
     /**
