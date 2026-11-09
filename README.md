@@ -1,5 +1,7 @@
 # Storyblok Transfers
 
+[![CI](https://github.com/tuxonice/storyblok-transfers/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tuxonice/storyblok-transfers/actions/workflows/ci.yml)
+
 Typed PHP objects for your Storyblok content, in any framework.
 
 - **Generate** a PHP transfer class for every component in your Storyblok space.
