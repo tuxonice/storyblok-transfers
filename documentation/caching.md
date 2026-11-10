@@ -31,32 +31,19 @@ $storyblok = StoryblokContent::fromEnvironment($cache);
 Only the plain response from Storyblok is stored, never your hydrated classes,
 so regenerating your classes can't leave stale class shapes in the cache.
 
-## With Symfony
+## In Laravel and Symfony
 
-Symfony's `Psr16Cache` turns any cache pool into a PSR-16 cache. In a Symfony
-app, give Storyblok a pool of its own:
+Both frameworks have caches the package can use directly:
 
-```yaml
-# config/packages/cache.yaml
-framework:
-    cache:
-        pools:
-            cache.storyblok:
-                adapter: cache.adapter.redis   # or cache.adapter.filesystem
-```
+- **Laravel.** Cache stores are PSR-16 caches, so `Cache::store('storyblok')`
+  is passed as it is.
+- **Symfony.** `Psr16Cache` turns a cache pool into a PSR-16 cache.
 
-```yaml
-# config/services.yaml
-services:
-    Tlab\StoryblokTransfers\Content\StoryblokContent:
-        factory: ['Tlab\StoryblokTransfers\Content\StoryblokContent', 'fromEnvironment']
-        arguments:
-            - !service
-                class: Symfony\Component\Cache\Psr16Cache
-                arguments: ['@cache.storyblok']
-```
+Give Storyblok a store or pool of its own in either; the
+[Laravel](laravel.md#the-cache-store) and
+[Symfony](symfony.md#the-cache-pool) pages show the full setup.
 
-Outside the framework, `symfony/cache` works on its own:
+Outside a framework, `symfony/cache` works on its own:
 
 ```php
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -66,9 +53,6 @@ $cache = new Psr16Cache(new FilesystemAdapter('storyblok', 0, __DIR__ . '/var/ca
 
 $storyblok = StoryblokContent::fromEnvironment($cache);
 ```
-
-Laravel's cache stores implement PSR-16 already, so `Cache::store()` can be
-passed as it is.
 
 ## Changing the settings
 
@@ -120,8 +104,7 @@ you gave one, gets a warning. Without a cache it has nothing to do and returns
 `true`.
 
 It clears the whole cache it was given, which is why Storyblok should have a
-pool of its own, as in the Symfony example. Several spaces sharing one pool are
-cleared together.
+store or pool of its own. Several spaces sharing one are cleared together.
 
 ### From a Storyblok webhook
 

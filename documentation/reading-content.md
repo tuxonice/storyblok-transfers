@@ -29,7 +29,9 @@ $storyblok = StoryblokContent::create(
 );
 ```
 
-Build it once and reuse it. In a framework, register it as a shared service.
+Build it once and reuse it. In a framework, register it as a shared service:
+see [Laravel](laravel.md#registering-the-service) and
+[Symfony](symfony.md#registering-the-service).
 
 It gives you three repositories:
 

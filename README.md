@@ -58,6 +58,8 @@ through this from an empty project.
 - [Links and datasources](documentation/links-and-datasources.md)
 - [Hydrating content yourself](documentation/hydration.md)
 - [Caching](documentation/caching.md)
+- [Using it with Laravel](documentation/laravel.md) or
+  [with Symfony](documentation/symfony.md)
 - [Limitations](documentation/limitations.md)
 - Reference: [configuration](documentation/reference/configuration.md),
   [field types](documentation/reference/field-types.md),

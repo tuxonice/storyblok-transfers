@@ -3,6 +3,11 @@
 The package reads its settings with `getenv()`. It doesn't load `.env` files,
 so use whatever your app or framework already does for that.
 
+Some frameworks load `.env` without making it visible to `getenv()`: Symfony
+always, and Laravel once the config is cached. There, pass the settings in
+yourself with `StoryblokContent::create()`, as the [Laravel](../laravel.md)
+and [Symfony](../symfony.md) pages show.
+
 ## Environment variables
 
 ### Generating classes
