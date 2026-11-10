@@ -7,6 +7,16 @@ the package uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **A built-in cache.** Pass any PSR-16 cache to `StoryblokContent::create()` or
+  `fromEnvironment()`, and published reads are cached for 5 minutes. If
+  Storyblok fails, the last copy is served for up to a day instead of an error.
+  Drafts are never cached. `CachingContentClient` takes custom timings, a key
+  prefix and a PSR-3 logger. See [Caching](documentation/caching.md).
+- New dependencies: the interface packages `psr/simple-cache`, `psr/clock` and
+  `psr/log`.
+
 ## [0.2.0] - 2026-11-10
 
 Rich text fields now hydrate into a `RichtextTransfer`, including the

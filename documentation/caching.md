@@ -1,76 +1,133 @@
 # Caching
 
-The package has no cache of its own. Every read is a request to Storyblok, which
-you'll want to avoid on most page views.
-
-Instead, every request goes through one small interface, `ContentClient`, with a
-single method. Wrap it with a cache and hand the wrapper to `StoryblokContent`.
+Without a cache, every read is a request to Storyblok. Pass any
+[PSR-16](https://www.php-fig.org/psr/psr-16/) cache, and published content is
+served from it instead:
 
 ```php
-use Tlab\StoryblokTransfers\Client\ContentClient;
-use Tlab\StoryblokTransfers\Client\ContentResponse;
+use Tlab\StoryblokTransfers\Content\StoryblokContent;
+
+$storyblok = StoryblokContent::fromEnvironment($cache);
+// or StoryblokContent::create($token, 'App\\DataTransferObjects', cache: $cache);
+```
+
+## What it does
+
+- **Published reads are cached for 5 minutes.** Within that time the same read
+  (a story, a listing, the links tree, datasource entries) is answered from the
+  cache. After that, the next read asks Storyblok again. A change published in
+  Storyblok therefore shows up within about 5 minutes.
+- **Drafts are never cached.** Previews always go straight to Storyblok, so
+  editors see their changes at once.
+- **Storyblok being down doesn't take your site down.** If a refresh fails
+  (Storyblok unreachable, an error, rate limiting), the last copy is served
+  instead, for up to a day. After that, the error goes through.
+- **"Not found" is remembered too**, for the same 5 minutes, so requests for
+  URLs that don't exist don't reach Storyblok every time. It's never served from
+  an old copy: once the 5 minutes are up, Storyblok is asked again.
+- **A broken cache is skipped.** If the cache throws, for example because Redis
+  is unreachable, reads go to Storyblok as if there were no cache.
+
+Only the plain response from Storyblok is stored, never your hydrated classes,
+so regenerating your classes can't leave stale class shapes in the cache.
+
+## With Symfony
+
+Symfony's `Psr16Cache` turns any cache pool into a PSR-16 cache. In a Symfony
+app, give Storyblok a pool of its own:
+
+```yaml
+# config/packages/cache.yaml
+framework:
+    cache:
+        pools:
+            cache.storyblok:
+                adapter: cache.adapter.redis   # or cache.adapter.filesystem
+```
+
+```yaml
+# config/services.yaml
+services:
+    Tlab\StoryblokTransfers\Content\StoryblokContent:
+        factory: ['Tlab\StoryblokTransfers\Content\StoryblokContent', 'fromEnvironment']
+        arguments:
+            - !service
+                class: Symfony\Component\Cache\Psr16Cache
+                arguments: ['@cache.storyblok']
+```
+
+Outside the framework, `symfony/cache` works on its own:
+
+```php
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Psr16Cache;
+
+$cache = new Psr16Cache(new FilesystemAdapter('storyblok', 0, __DIR__ . '/var/cache'));
+
+$storyblok = StoryblokContent::fromEnvironment($cache);
+```
+
+Laravel's cache stores implement PSR-16 already, so `Cache::store()` can be
+passed as it is.
+
+## Changing the settings
+
+To change the timings, log when old copies are served, or share one cache
+between several Storyblok spaces, build the caching client yourself and hand it
+to `usingClient()`:
+
+```php
+use Tlab\StoryblokTransfers\Client\CachingContentClient;
 use Tlab\StoryblokTransfers\Client\StoryblokContentClient;
 use Tlab\StoryblokTransfers\Content\StoryblokContent;
 
-final class CachingContentClient implements ContentClient
-{
-    public function __construct(
-        private readonly ContentClient $inner,
-        private readonly YourCache $cache,
-    ) {
-    }
-
-    public function get(string $path, array $query): ContentResponse
-    {
-        ksort($query);
-
-        $key = 'storyblok-' . hash('xxh3', $path . '?' . http_build_query($query));
-
-        return $this->cache->remember($key, 300, fn () => $this->inner->get($path, $query));
-    }
-}
-
-$storyblok = StoryblokContent::usingClient(
-    new CachingContentClient(
-        new StoryblokContentClient(getenv('STORYBLOK_DELIVERY_TOKEN')),
-        $cache,
-    ),
-    'App\\DataTransferObjects',
+$client = new CachingContentClient(
+    new StoryblokContentClient(getenv('STORYBLOK_DELIVERY_TOKEN')),
+    $cache,
+    freshFor: 120,          // seconds a copy is used without asking Storyblok
+    keepStaleFor: 3600,     // seconds beyond that it's kept for outages
+    keyPrefix: 'storyblok-shop',
+    logger: $logger,        // any PSR-3 logger
 );
+
+$storyblok = StoryblokContent::usingClient($client, 'App\\DataTransferObjects');
 ```
 
-`YourCache` stands for whatever your framework provides: a PSR-16 cache, Laravel's
-`Cache`, Symfony's cache contracts.
+| Setting | Default | |
+|---|---|---|
+| `freshFor` | `300` | `0` always asks Storyblok, but still falls back to the last copy in an outage |
+| `keepStaleFor` | `86400` | `0` turns the outage fallback off |
+| `keyPrefix` | `storyblok` | Letters, digits, `_`, `.` and `-`. Give each space its own when they share a cache |
+| `logger` | none | Gets a warning each time an old copy is served, so outages show up in your logs |
+| `clock` | the system clock | Any PSR-20 clock; useful in tests |
 
 `usingClient()` takes optional `ContentOptions` defaults as its third argument,
 like `create()`. For a non-EU space, pass the region's base URI as
 `StoryblokContentClient`'s third argument (see
 [Configuration](reference/configuration.md#regions)).
 
-## Things to get right
+## Clearing the cache
 
-**Sort the query before building the key.** The same request can arrive with
-its parameters in a different order, and without sorting you'd store it twice.
+To show a change immediately rather than within 5 minutes, clear the cache, for
+example from a Storyblok webhook when content is published. With a pool of its
+own, as in the Symfony example, `$cache->clear()` clears only Storyblok's
+entries.
 
-**Cache the response, not the hydrated objects.** `ContentResponse` is plain
-data. Hydrated transfers are instances of your generated classes, and a cache
-holding them keeps the old class shape after you regenerate, which fails in ways
-that are hard to trace.
-
-**Leave the token out of the key.** The client adds it after your wrapper has
-run, so it isn't in `$query`. Keep it that way.
-
-## Invalidation and `cv`
-
-Deciding when cached content is stale is up to your app. A common approach is a
-short lifetime, plus clearing the cache from a Storyblok webhook when content is
-published.
-
-Storyblok's own cache version, `cv`, can be passed on every read:
+Storyblok's own cache version, `cv`, can also be passed on every read:
 
 ```php
 $options = (new ContentOptions())->withCv((string) $cacheVersion);
 ```
 
-The package never reads or updates `cv` for you. Where the value comes from,
-and when it changes, is your invalidation policy.
+A different `cv` is a different read, so it gets its own cache entry. The
+package never reads or updates `cv` for you; where the value comes from is up to
+your app.
+
+## Writing your own
+
+Every request goes through one small interface, `ContentClient`, with a single
+`get()` method. `CachingContentClient` is one implementation of it. To cache
+differently, write your own and pass it to `usingClient()`. Keep to the same
+rules: sort the query before building a key, store the `ContentResponse` rather
+than hydrated objects, and leave the token out of the key. The token is added
+after your wrapper has run, so it isn't in `$query`.

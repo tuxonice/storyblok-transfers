@@ -35,6 +35,13 @@ your delivery token, so they're safe to log.
 | The datasource doesn't exist | `ResourceNotFoundException` |
 | API, network or response errors | `StoryblokApiException` |
 
+### With a cache
+
+With a [cache](../caching.md), a failed refresh of a published read (bad
+token, rate limit, Storyblok error, network failure) returns the last copy
+instead of throwing, for up to a day. Drafts, and reads with nothing cached,
+throw as above.
+
 ### Setting up `StoryblokContent`
 
 | Situation | Result |

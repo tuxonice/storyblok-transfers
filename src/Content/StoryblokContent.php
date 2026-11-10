@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tlab\StoryblokTransfers\Content;
 
 use GuzzleHttp\ClientInterface;
+use Psr\SimpleCache\CacheInterface;
 use RuntimeException;
+use Tlab\StoryblokTransfers\Client\CachingContentClient;
 use Tlab\StoryblokTransfers\Client\ContentClient;
 use Tlab\StoryblokTransfers\Client\StoryblokContentClient;
 use Tlab\StoryblokTransfers\Hydration\ComponentClassResolver;
@@ -44,6 +46,10 @@ final class StoryblokContent
      *        pass its own options - listings included. Null means the library's
      *        own defaults, which are the published version and no language.
      * @param string|null $baseUri Region endpoint; null for the EU default.
+     * @param CacheInterface|null $cache Caches published reads for five
+     *        minutes and falls back to the last copy for a day when Storyblok
+     *        fails; drafts are never cached. For other settings, a logger or a
+     *        key prefix, build a CachingContentClient and use usingClient().
      */
     public static function create(
         string $deliveryToken,
@@ -51,13 +57,16 @@ final class StoryblokContent
         ?ContentOptions $defaults = null,
         ?string $baseUri = null,
         ?ClientInterface $httpClient = null,
+        ?CacheInterface $cache = null,
     ): self {
+        $client = new StoryblokContentClient(
+            $deliveryToken,
+            $httpClient,
+            $baseUri ?? StoryblokContentClient::DEFAULT_BASE_URI,
+        );
+
         return new self(
-            new StoryblokContentClient(
-                $deliveryToken,
-                $httpClient,
-                $baseUri ?? StoryblokContentClient::DEFAULT_BASE_URI,
-            ),
+            $cache === null ? $client : new CachingContentClient($client, $cache),
             $namespace,
             $defaults ?? new ContentOptions(),
         );
@@ -81,11 +90,13 @@ final class StoryblokContent
      * This package ships no dotenv reader - getenv() is all it does, the same
      * as bin/generate. Load the file yourself, or let Docker Compose do it.
      *
+     * @param CacheInterface|null $cache As for create().
+     *
      * @throws RuntimeException When the delivery token is not set, or
      *         STORYBLOK_DEFAULT_VERSION is set to something other than
      *         published or draft (in any case).
      */
-    public static function fromEnvironment(): self
+    public static function fromEnvironment(?CacheInterface $cache = null): self
     {
         $token = self::env('STORYBLOK_DELIVERY_TOKEN');
 
@@ -101,6 +112,7 @@ final class StoryblokContent
             self::env('STORYBLOK_NAMESPACE') ?? 'App\\DataTransferObjects',
             new ContentOptions(self::versionFromEnvironment()),
             self::env('STORYBLOK_CONTENT_BASE_URI'),
+            cache: $cache,
         );
     }
 
