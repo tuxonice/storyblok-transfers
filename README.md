@@ -1,6 +1,7 @@
 # Storyblok Transfers
 
 [![CI](https://github.com/tuxonice/storyblok-transfers/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tuxonice/storyblok-transfers/actions/workflows/ci.yml)
+[![Packagist](https://img.shields.io/packagist/v/tuxonice/storyblok-transfers)](https://packagist.org/packages/tuxonice/storyblok-transfers)
 [![PHP](https://img.shields.io/badge/php-%5E8.3-777BB4?logo=php&logoColor=white)](composer.json)
 [![License](https://img.shields.io/github/license/tuxonice/storyblok-transfers)](LICENSE)
 
