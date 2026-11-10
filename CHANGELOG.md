@@ -7,6 +7,12 @@ the package uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-10
+
+Rich text fields now hydrate into a `RichtextTransfer`, including the
+components inserted into them. This is a breaking change for generated code;
+read *Changed* before regenerating.
+
 ### Changed
 
 - **Breaking: `richtext` fields are now `?RichtextTransfer`, not `?array`.**
@@ -62,5 +68,6 @@ The first release.
 - `RichtextTransfer` ships with the package but is not yet used by the generator
   or the hydrator; rich text fields still arrive as arrays.
 
-[Unreleased]: https://github.com/tuxonice/storyblok-transfers/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/tuxonice/storyblok-transfers/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/tuxonice/storyblok-transfers/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tuxonice/storyblok-transfers/releases/tag/v0.1.0
