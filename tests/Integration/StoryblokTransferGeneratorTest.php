@@ -186,7 +186,7 @@ final class StoryblokTransferGeneratorTest extends TestCase
                 'name' => 'round_trip',
                 'schema' => [
                     'headline' => ['type' => 'text'],
-                    'body' => ['type' => 'richtext'],
+                    'specs' => ['type' => 'table'],
                     'tags' => ['type' => 'options'],
                 ],
             ],
@@ -199,7 +199,7 @@ final class StoryblokTransferGeneratorTest extends TestCase
 
         $transfer = $class::fromArray([
             'headline' => 'Hello',
-            'body' => ['type' => 'doc', 'content' => []],
+            'specs' => ['type' => 'doc', 'content' => []],
             'tags' => ['a', 'b'],
         ]);
 
@@ -208,7 +208,7 @@ final class StoryblokTransferGeneratorTest extends TestCase
         /** @phpstan-ignore-next-line */
         self::assertSame('Hello', $transfer->getHeadline());
         /** @phpstan-ignore-next-line */
-        self::assertSame(['type' => 'doc', 'content' => []], $transfer->getBody());
+        self::assertSame(['type' => 'doc', 'content' => []], $transfer->getSpecs());
         /** @phpstan-ignore-next-line */
         self::assertSame(['a', 'b'], $transfer->getTags());
     }

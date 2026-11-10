@@ -61,13 +61,3 @@ the relations up before rendering the parts.
 
 This is the price of keeping the generated property a plain `?string` uuid: the
 alternative would change every generated class.
-
-## Rich text is a raw array
-
-A `richtext` field comes through as Storyblok's own document structure, an
-array, ready to hand to a rich-text renderer such as
-[`storyblok/richtext-resolver`](https://github.com/storyblok/storyblok-php-richtext-renderer).
-Components embedded inside rich text are **not** hydrated into your classes.
-
-The package includes a `RichtextTransfer` class meant for this, but it isn't
-wired into the generator or the hydrator yet, so generated classes don't use it.

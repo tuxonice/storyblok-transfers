@@ -7,6 +7,7 @@ use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Tlab\StoryblokTransfers\Hydration\PropertyTypeResolver;
 use Tlab\StoryblokTransfers\Transfers\BlokTransfer;
+use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
 use Tlab\TransferObjects\AbstractTransfer;
 
 /**
@@ -107,6 +108,20 @@ final class TransferGraphPrinter
             if ($value instanceof AbstractTransfer) {
                 $this->transfers++;
                 $this->inspect($value, $childPath, $depth + 1);
+
+                continue;
+            }
+
+            // A richtext document's bloks are a map of blok lists, keyed by blok
+            // node id, so its declared type names no element class. Each list
+            // holds components exactly like a bloks field does, raw ones
+            // included, so give each the same check.
+            if ($transfer instanceof RichtextTransfer && $name === 'bloks' && is_array($value)) {
+                foreach ($value as $id => $components) {
+                    if (is_array($components)) {
+                        $this->inspectArray($components, $childPath . '[' . $id . ']', $depth + 1, true);
+                    }
+                }
 
                 continue;
             }

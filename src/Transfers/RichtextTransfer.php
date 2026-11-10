@@ -64,7 +64,10 @@ final class RichtextTransfer extends AbstractTransfer
      * Keyed by the blok node's attrs.id. A list may hold transfers, raw arrays
      * for components with no generated class, or both.
      *
-     * @var array<string, list<mixed>>
+     * array-key rather than string: PHP stores a numeric id such as "123" as
+     * the integer 123. Looking it up by the string still finds it.
+     *
+     * @var array<array-key, list<mixed>>
      */
     private array $bloks = [];
 
@@ -123,7 +126,7 @@ final class RichtextTransfer extends AbstractTransfer
     }
 
     /**
-     * @return array<string, list<mixed>>
+     * @return array<array-key, list<mixed>>
      */
     public function getBloks(): array
     {
@@ -131,7 +134,7 @@ final class RichtextTransfer extends AbstractTransfer
     }
 
     /**
-     * @param array<string, list<mixed>>|null $bloks
+     * @param array<array-key, list<mixed>>|null $bloks
      */
     public function setBloks(mixed $bloks): self
     {

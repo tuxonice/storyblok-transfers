@@ -34,6 +34,7 @@ The hydrator converts the nested values first.
 | `multiasset` | a list of `AssetTransfer` |
 | `link`, `multilink` | `LinkTransfer` |
 | `bloks` | the generated class for each blok, matched on its `component` |
+| `richtext` | `RichtextTransfer`, with the components inserted into it hydrated too; see [Rich text](rich-text.md) |
 | everything else | passed through as it is |
 
 Bloks inside bloks work at any depth. An empty asset or link, which Storyblok

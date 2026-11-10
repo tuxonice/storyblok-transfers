@@ -291,6 +291,11 @@ final class SmokeTest
 
         // The reflection-driven round trip is where a defaultless typed property
         // on a generated class would surface, so exercise it explicitly.
+        //
+        // It is a check that nothing throws, not a faithful copy. Upstream's
+        // toArray(true) re-indexes the string keys of array properties, so a
+        // RichtextTransfer's attrs and its bloks map come out as lists, and the
+        // components in bloks come out empty. Nothing here relies on its shape.
         try {
             $roundTripped = $transfer->toArray(true);
         } catch (Throwable $e) {

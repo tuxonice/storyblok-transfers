@@ -12,6 +12,7 @@ else builds on it.
 | [Generating transfers](generating-transfers.md) | control where files go, regenerate, run it in CI |
 | [Reading content](reading-content.md) | read stories by slug or uuid, list them, read drafts or other languages |
 | [Relations](relations.md) | follow a field that points at another story |
+| [Rich text](rich-text.md) | render rich text, including components inserted into it |
 | [Links and datasources](links-and-datasources.md) | build navigation, or read option lists |
 | [Hydrating content yourself](hydration.md) | turn a content array you already have into transfers |
 | [Caching](caching.md) | stop calling Storyblok on every request |

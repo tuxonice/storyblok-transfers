@@ -54,6 +54,7 @@ through this from an empty project.
 - [Generating transfers](documentation/generating-transfers.md)
 - [Reading content](documentation/reading-content.md)
 - [Relations](documentation/relations.md)
+- [Rich text](documentation/rich-text.md)
 - [Links and datasources](documentation/links-and-datasources.md)
 - [Hydrating content yourself](documentation/hydration.md)
 - [Caching](documentation/caching.md)
