@@ -148,6 +148,21 @@ final class StoryblokContent
         return $this->datasources ??= new DatasourceRepository($this->client, $this->defaults);
     }
 
+    /**
+     * Empties the cache, so the next read of anything asks Storyblok. Call it
+     * from a Storyblok webhook to show published changes at once.
+     *
+     * With no cache there is nothing to clear, and it returns true. A client
+     * of your own passed to usingClient() is not looked into: clear its cache
+     * yourself.
+     *
+     * @return bool False when the cache failed to clear.
+     */
+    public function clearCache(): bool
+    {
+        return $this->client instanceof CachingContentClient ? $this->client->clear() : true;
+    }
+
     public function defaults(): ContentOptions
     {
         return $this->defaults;

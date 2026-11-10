@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
+use Psr\SimpleCache\CacheInterface;
 use Stringable;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Psr16Cache;
@@ -193,8 +194,8 @@ final class CachingContentClientTest extends TestCase
         $first = FakeContentClient::returning($this->response('space one'));
         $second = FakeContentClient::returning($this->response('space two'));
 
-        $this->client($first, 'space-one')->get('cdn/stories/home', self::PUBLISHED);
-        $response = $this->client($second, 'space-two')->get('cdn/stories/home', self::PUBLISHED);
+        $this->client($first, prefix: 'space-one')->get('cdn/stories/home', self::PUBLISHED);
+        $response = $this->client($second, prefix: 'space-two')->get('cdn/stories/home', self::PUBLISHED);
 
         self::assertSame(['story' => 'space two'], $response->body);
     }
@@ -280,6 +281,27 @@ final class CachingContentClientTest extends TestCase
         self::assertCount(2, $inner->requests);
     }
 
+    public function testClearMakesTheNextReadAskStoryblok(): void
+    {
+        $inner = FakeContentClient::returning($this->response('before'), $this->response('after'));
+        $client = $this->client($inner);
+
+        $client->get('cdn/stories/home', self::PUBLISHED);
+
+        self::assertTrue($client->clear());
+        self::assertSame(['story' => 'after'], $client->get('cdn/stories/home', self::PUBLISHED)->body);
+        self::assertCount(2, $inner->requests);
+    }
+
+    public function testClearReportsAndLogsABrokenCache(): void
+    {
+        $client = $this->client(FakeContentClient::returning(), new BrokenCache());
+
+        self::assertFalse($client->clear());
+        self::assertCount(1, $this->warnings);
+        self::assertStringContainsString('cache backend unavailable', $this->warnings[0]);
+    }
+
     public function testAcceptsAZeroFreshWindow(): void
     {
         // Always refresh, but still fall back to the last copy in an outage.
@@ -315,13 +337,16 @@ final class CachingContentClientTest extends TestCase
         new CachingContentClient(FakeContentClient::returning(), $this->cache, ...$settings);
     }
 
-    private function client(FakeContentClient $inner, string $prefix = 'storyblok'): CachingContentClient
-    {
+    private function client(
+        FakeContentClient $inner,
+        ?CacheInterface $cache = null,
+        string $prefix = 'storyblok',
+    ): CachingContentClient {
         $test = $this;
 
         return new CachingContentClient(
             $inner,
-            $this->cache,
+            $cache ?? $this->cache,
             keyPrefix: $prefix,
             logger: new class ($test) extends AbstractLogger {
                 public function __construct(private readonly CachingContentClientTest $test)
