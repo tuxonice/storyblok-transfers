@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace Tlab\StoryblokTransfers\Tests\Unit;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
+use ReflectionProperty;
 use RuntimeException;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Psr16Cache;
+use Tlab\StoryblokTransfers\Client\CachingContentClient;
 use Tlab\StoryblokTransfers\Client\ContentResponse;
 use Tlab\StoryblokTransfers\Content\ContentOptions;
 use Tlab\StoryblokTransfers\Content\StoryblokContent;
@@ -78,6 +88,45 @@ final class StoryblokContentTest extends TestCase
         self::assertNotNull($story);
         self::assertInstanceOf(NestedFixtureTransfer::class, $story->getContent());
         self::assertSame('Wired', $story->getContent()->getHeadline());
+    }
+
+    public function testCachesPublishedReadsWhenGivenACache(): void
+    {
+        $sent = 0;
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, [], (string) json_encode(['story' => $this->storyPayload()])),
+        ]));
+        $stack->push(Middleware::mapRequest(static function (RequestInterface $request) use (&$sent) {
+            $sent++;
+
+            return $request;
+        }));
+
+        $stories = StoryblokContent::create(
+            'token',
+            self::FIXTURE_NAMESPACE,
+            httpClient: new Client(['handler' => $stack]),
+            cache: new Psr16Cache(new ArrayAdapter()),
+        )->stories();
+
+        $first = $stories->bySlug('home');
+        $second = $stories->bySlug('home');
+
+        self::assertNotNull($first);
+        self::assertNotNull($second);
+        self::assertSame(1, $sent);
+    }
+
+    public function testPassesTheCacheThroughFromTheEnvironment(): void
+    {
+        putenv('STORYBLOK_DELIVERY_TOKEN=env-token');
+
+        $content = StoryblokContent::fromEnvironment(new Psr16Cache(new ArrayAdapter()));
+
+        self::assertInstanceOf(
+            CachingContentClient::class,
+            (new ReflectionProperty(StoryblokContent::class, 'client'))->getValue($content)
+        );
     }
 
     public function testReturnsTheSameRepositoryInstanceEachTime(): void
