@@ -7,6 +7,11 @@ the package uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-10
+
+The cache can now be cleared on demand, so a change published in Storyblok
+shows up at once instead of within 5 minutes. Nothing changes unless you call it.
+
 ### Added
 
 - **Clearing the cache.** `StoryblokContent::clearCache()` empties the cache so
@@ -91,7 +96,8 @@ The first release.
 - `RichtextTransfer` ships with the package but is not yet used by the generator
   or the hydrator; rich text fields still arrive as arrays.
 
-[Unreleased]: https://github.com/tuxonice/storyblok-transfers/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/tuxonice/storyblok-transfers/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/tuxonice/storyblok-transfers/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/tuxonice/storyblok-transfers/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tuxonice/storyblok-transfers/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tuxonice/storyblok-transfers/releases/tag/v0.1.0
