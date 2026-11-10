@@ -7,6 +7,14 @@ the package uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Clearing the cache.** `StoryblokContent::clearCache()` empties the cache so
+  the next read asks Storyblok, for example from a Storyblok webhook when
+  content is published. `CachingContentClient::clear()` does the same for a
+  client built by hand. See
+  [Clearing the cache](documentation/caching.md#clearing-the-cache).
+
 ## [0.3.0] - 2026-11-10
 
 Published content can now be cached in any PSR-16 cache, with the last copy

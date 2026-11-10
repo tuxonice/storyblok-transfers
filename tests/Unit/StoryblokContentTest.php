@@ -117,6 +117,51 @@ final class StoryblokContentTest extends TestCase
         self::assertSame(1, $sent);
     }
 
+    public function testClearCacheMakesTheNextReadAskStoryblok(): void
+    {
+        $sent = 0;
+        $content = StoryblokContent::create(
+            'token',
+            self::FIXTURE_NAMESPACE,
+            httpClient: $this->countingHttpClient($sent, 2),
+            cache: new Psr16Cache(new ArrayAdapter()),
+        );
+
+        $content->stories()->bySlug('home');
+        $content->stories()->bySlug('home');
+
+        self::assertTrue($content->clearCache());
+
+        $content->stories()->bySlug('home');
+
+        self::assertSame(2, $sent);
+    }
+
+    public function testClearCacheReachesACachingClientPassedToUsingClient(): void
+    {
+        $inner = FakeContentClient::returning(
+            new ContentResponse(['story' => $this->storyPayload()]),
+            new ContentResponse(['story' => $this->storyPayload()]),
+        );
+        $content = StoryblokContent::usingClient(
+            new CachingContentClient($inner, new Psr16Cache(new ArrayAdapter())),
+            self::FIXTURE_NAMESPACE,
+        );
+
+        $content->stories()->bySlug('home');
+        self::assertTrue($content->clearCache());
+        $content->stories()->bySlug('home');
+
+        self::assertCount(2, $inner->requests);
+    }
+
+    public function testClearCacheWithoutACacheHasNothingToDo(): void
+    {
+        $content = StoryblokContent::usingClient(FakeContentClient::returning(), self::FIXTURE_NAMESPACE);
+
+        self::assertTrue($content->clearCache());
+    }
+
     public function testPassesTheCacheThroughFromTheEnvironment(): void
     {
         putenv('STORYBLOK_DELIVERY_TOKEN=env-token');
@@ -238,5 +283,22 @@ final class StoryblokContentTest extends TestCase
             'full_slug' => 'home',
             'content' => ['component' => 'nested_fixture', 'headline' => 'Wired'],
         ];
+    }
+
+    /**
+     * An HTTP client that answers $responses requests with the fixture story
+     * and counts them in $sent.
+     */
+    private function countingHttpClient(int &$sent, int $responses): Client
+    {
+        $body = (string) json_encode(['story' => $this->storyPayload()]);
+        $stack = HandlerStack::create(new MockHandler(array_fill(0, $responses, new Response(200, [], $body))));
+        $stack->push(Middleware::mapRequest(static function (RequestInterface $request) use (&$sent) {
+            $sent++;
+
+            return $request;
+        }));
+
+        return new Client(['handler' => $stack]);
     }
 }

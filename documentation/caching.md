@@ -108,10 +108,53 @@ like `create()`. For a non-EU space, pass the region's base URI as
 
 ## Clearing the cache
 
-To show a change immediately rather than within 5 minutes, clear the cache, for
-example from a Storyblok webhook when content is published. With a pool of its
-own, as in the Symfony example, `$cache->clear()` clears only Storyblok's
-entries.
+To show a change immediately rather than within 5 minutes, clear the cache:
+
+```php
+$storyblok->clearCache();
+```
+
+The next read of anything asks Storyblok again. `clearCache()` returns `false`
+if the cache couldn't be cleared (Redis unreachable, say), and the logger, if
+you gave one, gets a warning. Without a cache it has nothing to do and returns
+`true`.
+
+It clears the whole cache it was given, which is why Storyblok should have a
+pool of its own, as in the Symfony example. Several spaces sharing one pool are
+cleared together.
+
+### From a Storyblok webhook
+
+In Storyblok, under **Settings → Webhooks**, add a webhook pointing at a route
+in your app and tick the story events (published, unpublished, deleted, moved)
+and datasource entry events. The route only has to clear the cache and answer
+with a 2xx JSON response, which is what Storyblok expects:
+
+```php
+// public/storyblok-webhook.php
+use Tlab\StoryblokTransfers\Content\StoryblokContent;
+
+$storyblok = StoryblokContent::fromEnvironment($cache);
+
+$cleared = $storyblok->clearCache();
+
+http_response_code($cleared ? 200 : 500);
+header('Content-Type: application/json');
+echo json_encode(['cleared' => $cleared]);
+```
+
+Storyblok doesn't retry a failed webhook, so a cache that couldn't be cleared
+catches up on its own once the 5 minutes are up.
+
+The package doesn't check where the request came from. On paid plans Storyblok
+signs each webhook with a secret you set, in a `webhook-signature` header (a
+hex HMAC-SHA1 of the raw body). Verify that in your route if you want to stop
+others from clearing your cache. Anyone who can call the route can only make
+your next reads go to Storyblok, never change what they return.
+
+If you passed `usingClient()` a client of your own rather than a
+`CachingContentClient`, `clearCache()` can't see inside it. Clear your own
+cache directly.
 
 Storyblok's own cache version, `cv`, can also be passed on every read:
 

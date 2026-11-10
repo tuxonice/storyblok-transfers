@@ -24,6 +24,8 @@ use Throwable;
  *   URLs does not reach Storyblok on every request, but it is never served
  *   stale: a failure while re-checking one is a failure.
  * - A cache that throws is skipped, and the read goes to Storyblok.
+ * - clear() empties the cache, for a webhook to call when content is
+ *   published.
  *
  * What is stored is the response's plain data and the time it was fetched,
  * never hydrated transfers, so regenerating classes cannot leave old class
@@ -128,6 +130,27 @@ final class CachingContentClient implements ContentClient
         ], $this->freshFor + $this->keepStaleFor);
 
         return $response;
+    }
+
+    /**
+     * Empties the whole cache, so the next read of anything asks Storyblok.
+     *
+     * This calls clear() on the cache it was given, which is why Storyblok
+     * should have a pool of its own: everything in it goes, other spaces'
+     * entries included.
+     *
+     * @return bool False when the cache failed to clear. If the cache threw,
+     *              the logger, if given, hears why.
+     */
+    public function clear(): bool
+    {
+        try {
+            return $this->cache->clear();
+        } catch (Throwable $e) {
+            $this->logger?->warning('Could not clear the Storyblok cache: ' . $e->getMessage());
+
+            return false;
+        }
     }
 
     /**
