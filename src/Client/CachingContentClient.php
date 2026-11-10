@@ -31,7 +31,7 @@ use Throwable;
  * never hydrated transfers, so regenerating classes cannot leave old class
  * shapes in the cache.
  */
-final class CachingContentClient implements ContentClient
+final readonly class CachingContentClient implements ContentClient
 {
     public const DEFAULT_FRESH_FOR = 300;
 
@@ -54,13 +54,13 @@ final class CachingContentClient implements ContentClient
      * @throws InvalidArgumentException When a setting is out of range.
      */
     public function __construct(
-        private readonly ContentClient $inner,
-        private readonly CacheInterface $cache,
-        private readonly int $freshFor = self::DEFAULT_FRESH_FOR,
-        private readonly int $keepStaleFor = self::DEFAULT_KEEP_STALE_FOR,
-        private readonly string $keyPrefix = 'storyblok',
-        private readonly ?LoggerInterface $logger = null,
-        private readonly ?ClockInterface $clock = null,
+        private ContentClient $inner,
+        private CacheInterface $cache,
+        private int $freshFor = self::DEFAULT_FRESH_FOR,
+        private int $keepStaleFor = self::DEFAULT_KEEP_STALE_FOR,
+        private string $keyPrefix = 'storyblok',
+        private ?LoggerInterface $logger = null,
+        private ?ClockInterface $clock = null,
     ) {
         if ($freshFor < 0 || $keepStaleFor < 0) {
             throw new InvalidArgumentException('freshFor and keepStaleFor cannot be negative.');

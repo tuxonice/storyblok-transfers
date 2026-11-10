@@ -18,7 +18,7 @@ use Tlab\TransferObjects\AbstractTransfer;
  * knows the type passes it and gets it asserted and echoed back through the
  * generic.
  */
-final class StoryRepository
+final readonly class StoryRepository
 {
     /**
      * How many relations the CDA resolves in one request, and so how many
@@ -28,10 +28,10 @@ final class StoryRepository
     private const RELATIONS_PER_REQUEST = 50;
 
     public function __construct(
-        private readonly ContentClient $client,
-        private readonly StoryMapper $mapper,
-        private readonly RelationMapFactory $relationMapFactory,
-        private readonly ContentOptions $defaults = new ContentOptions(),
+        private ContentClient $client,
+        private StoryMapper $mapper,
+        private RelationMapFactory $relationMapFactory,
+        private ContentOptions $defaults = new ContentOptions(),
     ) {
     }
 

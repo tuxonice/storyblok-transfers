@@ -27,13 +27,13 @@ use Psr\Http\Message\ResponseInterface;
  * credential is in a header; copying that here would write the delivery token
  * into logs and crash reports.
  */
-final class StoryblokContentClient implements ContentClient
+final readonly class StoryblokContentClient implements ContentClient
 {
     public const DEFAULT_BASE_URI = 'https://api.storyblok.com/v2/';
 
     private const REDACTION = '[redacted]';
 
-    private readonly ClientInterface $httpClient;
+    private ClientInterface $httpClient;
 
     /**
      * @param string $token A Content Delivery API token, preview or public.
@@ -44,9 +44,9 @@ final class StoryblokContentClient implements ContentClient
      * @throws InvalidArgumentException When the base URI does not end in /v2.
      */
     public function __construct(
-        private readonly string $token,
+        private string $token,
         ?ClientInterface $httpClient = null,
-        private readonly string $baseUri = self::DEFAULT_BASE_URI,
+        private string $baseUri = self::DEFAULT_BASE_URI,
     ) {
         $this->httpClient = $httpClient ?? new Client();
 

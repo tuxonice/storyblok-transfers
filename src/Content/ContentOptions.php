@@ -13,7 +13,7 @@ namespace Tlab\StoryblokTransfers\Content;
  *
  * Immutable: every with...() returns a new instance.
  */
-final class ContentOptions
+final readonly class ContentOptions
 {
     /**
      * @param list<string> $resolveRelations Fields to resolve, in Storyblok's
@@ -23,10 +23,10 @@ final class ContentOptions
      *                        when it changes is the invalidation policy.
      */
     public function __construct(
-        public readonly Version $version = Version::Published,
-        public readonly ?string $language = null,
-        public readonly array $resolveRelations = [],
-        public readonly ?string $cv = null,
+        public Version $version = Version::Published,
+        public ?string $language = null,
+        public array $resolveRelations = [],
+        public ?string $cv = null,
     ) {
     }
 

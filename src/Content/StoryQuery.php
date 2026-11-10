@@ -20,7 +20,7 @@ namespace Tlab\StoryblokTransfers\Content;
  * configured default unreachable from the listing path - the classic preview
  * failure where detail pages show drafts and listings show published content.
  */
-final class StoryQuery
+final readonly class StoryQuery
 {
     /**
      * @param ContentOptions|null $options An override for the repository's
@@ -31,14 +31,14 @@ final class StoryQuery
      * @param list<string> $excludingFields
      */
     public function __construct(
-        public readonly ?ContentOptions $options = null,
-        public readonly ?string $startsWith = null,
-        public readonly array $filterQuery = [],
-        public readonly ?string $sortBy = null,
-        public readonly array $byUuids = [],
-        public readonly array $excludingFields = [],
-        public readonly int $page = 1,
-        public readonly int $perPage = 25,
+        public ?ContentOptions $options = null,
+        public ?string $startsWith = null,
+        public array $filterQuery = [],
+        public ?string $sortBy = null,
+        public array $byUuids = [],
+        public array $excludingFields = [],
+        public int $page = 1,
+        public int $perPage = 25,
     ) {
     }
 

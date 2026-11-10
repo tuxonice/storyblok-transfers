@@ -7,15 +7,15 @@ namespace Tlab\StoryblokTransfers\Hydration;
 /**
  * What a single transfer property needs doing to it before assignment.
  */
-final class PropertyType
+final readonly class PropertyType
 {
     /**
      * @param class-string|null $transferClass Set when the property holds one nested transfer.
      * @param class-string|null $elementTransferClass Set when the property is an array of transfers.
      */
     public function __construct(
-        public readonly ?string $transferClass = null,
-        public readonly ?string $elementTransferClass = null,
+        public ?string $transferClass = null,
+        public ?string $elementTransferClass = null,
     ) {
     }
 

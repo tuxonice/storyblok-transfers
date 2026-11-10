@@ -13,10 +13,10 @@ use Tlab\StoryblokTransfers\Client\StoryblokManagementClient;
  * Field order is whatever the API returned, which keeps the generated
  * definition files stable and diffable between runs.
  */
-final class ComponentSchemaFetcher
+final readonly class ComponentSchemaFetcher
 {
     public function __construct(
-        private readonly StoryblokManagementClient $client,
+        private StoryblokManagementClient $client,
     ) {
     }
 

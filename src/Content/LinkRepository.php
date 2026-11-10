@@ -10,11 +10,11 @@ use Tlab\StoryblokTransfers\Client\StoryblokApiException;
 /**
  * Reads the links tree: the structure of a space without its content.
  */
-final class LinkRepository
+final readonly class LinkRepository
 {
     public function __construct(
-        private readonly ContentClient $client,
-        private readonly ContentOptions $defaults = new ContentOptions(),
+        private ContentClient $client,
+        private ContentOptions $defaults = new ContentOptions(),
     ) {
     }
 

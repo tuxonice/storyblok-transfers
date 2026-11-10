@@ -15,16 +15,16 @@ use Tlab\TransferObjects\AbstractTransfer;
  * content layer can use the same mapping for a story's root component. Both
  * must agree, or one of them looks up classes the other never writes.
  */
-final class ComponentClassResolver
+final readonly class ComponentClassResolver
 {
-    private readonly ComponentNameFormatter $nameFormatter;
+    private ComponentNameFormatter $nameFormatter;
 
     /**
      * @param string $namespace Namespace the generated transfers live in,
      *                          e.g. 'App\DataTransferObjects'.
      */
     public function __construct(
-        private readonly string $namespace,
+        private string $namespace,
     ) {
         $this->nameFormatter = new ComponentNameFormatter();
     }

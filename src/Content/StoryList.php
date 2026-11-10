@@ -18,7 +18,7 @@ use Traversable;
  * @template T of AbstractTransfer
  * @implements IteratorAggregate<int, StoryTransfer<T>>
  */
-final class StoryList implements IteratorAggregate
+final readonly class StoryList implements IteratorAggregate
 {
     /**
      * @param list<StoryTransfer<T>> $stories
@@ -26,12 +26,12 @@ final class StoryList implements IteratorAggregate
      *        component has no generated class.
      */
     public function __construct(
-        private readonly array $stories,
-        private readonly int $total,
-        private readonly int $page,
-        private readonly int $perPage,
-        private readonly RelationMap $relations,
-        private readonly array $skipped = [],
+        private array $stories,
+        private int $total,
+        private int $page,
+        private int $perPage,
+        private RelationMap $relations,
+        private array $skipped = [],
     ) {
     }
 

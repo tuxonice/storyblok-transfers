@@ -22,15 +22,15 @@ use Tlab\TransferObjects\AbstractTransfer;
  * RichtextTransfer, and the components embedded in its tree are hydrated and
  * hung off it by key.
  */
-final class StoryblokHydrator
+final readonly class StoryblokHydrator
 {
-    private readonly PropertyTypeResolver $typeResolver;
+    private PropertyTypeResolver $typeResolver;
 
-    private readonly PropertyNameNormalizer $nameNormalizer;
+    private PropertyNameNormalizer $nameNormalizer;
 
-    private readonly ComponentClassResolver $componentClassResolver;
+    private ComponentClassResolver $componentClassResolver;
 
-    private readonly RichtextBlokCollector $blokCollector;
+    private RichtextBlokCollector $blokCollector;
 
     /**
      * @param string $namespace Namespace the generated transfers live in,

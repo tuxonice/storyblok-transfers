@@ -11,19 +11,19 @@ namespace Tlab\StoryblokTransfers\Content;
  * Its own type rather than a reuse of LinkTransfer: that models a link *field*
  * inside a component, which is a different payload with different keys.
  */
-final class LinkEntry
+final readonly class LinkEntry
 {
     public function __construct(
-        private readonly string $uuid,
-        private readonly string $slug,
-        private readonly string $name,
-        private readonly bool $isFolder = false,
-        private readonly ?int $id = null,
-        private readonly ?int $parentId = null,
-        private readonly bool $published = false,
-        private readonly int $position = 0,
-        private readonly ?string $realPath = null,
-        private readonly bool $isStartpage = false,
+        private string $uuid,
+        private string $slug,
+        private string $name,
+        private bool $isFolder = false,
+        private ?int $id = null,
+        private ?int $parentId = null,
+        private bool $published = false,
+        private int $position = 0,
+        private ?string $realPath = null,
+        private bool $isStartpage = false,
     ) {
     }
 

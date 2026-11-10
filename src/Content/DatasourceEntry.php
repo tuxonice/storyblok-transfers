@@ -10,13 +10,13 @@ namespace Tlab\StoryblokTransfers\Content;
  * $dimensionValue holds the translation for the requested dimension, and is
  * null when no dimension was asked for or none is set.
  */
-final class DatasourceEntry
+final readonly class DatasourceEntry
 {
     public function __construct(
-        private readonly string $name,
-        private readonly string $value,
-        private readonly ?int $id = null,
-        private readonly ?string $dimensionValue = null,
+        private string $name,
+        private string $value,
+        private ?int $id = null,
+        private ?string $dimensionValue = null,
     ) {
     }
 

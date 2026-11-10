@@ -15,10 +15,10 @@ use Tlab\StoryblokTransfers\Schema\ComponentNameFormatter;
  * meant to be readable and diffable, which is why they are pretty printed and
  * keep their slashes and backslashes unescaped.
  */
-final class DefinitionFileWriter
+final readonly class DefinitionFileWriter
 {
     public function __construct(
-        private readonly ComponentNameFormatter $nameFormatter = new ComponentNameFormatter(),
+        private ComponentNameFormatter $nameFormatter = new ComponentNameFormatter(),
     ) {
     }
 

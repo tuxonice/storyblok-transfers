@@ -13,11 +13,11 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Thin wrapper over the Storyblok Management API.
  */
-final class StoryblokManagementClient
+final readonly class StoryblokManagementClient
 {
     public const DEFAULT_BASE_URI = 'https://mapi.storyblok.com/v1/';
 
-    private readonly ClientInterface $httpClient;
+    private ClientInterface $httpClient;
 
     /**
      * @param string $token A Storyblok personal access token.
@@ -30,10 +30,10 @@ final class StoryblokManagementClient
      *                                    issued through the OAuth flow.
      */
     public function __construct(
-        private readonly string $token,
+        private string $token,
         ?ClientInterface $httpClient = null,
-        private readonly string $baseUri = self::DEFAULT_BASE_URI,
-        private readonly string $authorizationScheme = '',
+        private string $baseUri = self::DEFAULT_BASE_URI,
+        private string $authorizationScheme = '',
     ) {
         $this->httpClient = $httpClient ?? new Client();
     }

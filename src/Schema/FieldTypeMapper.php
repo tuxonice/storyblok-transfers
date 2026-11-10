@@ -12,7 +12,7 @@ use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
 /**
  * Maps a Storyblok schema field onto a transfer-objects property definition.
  */
-final class FieldTypeMapper
+final readonly class FieldTypeMapper
 {
     /**
      * Storyblok field types that carry no data - they only group the editor UI.
@@ -34,7 +34,7 @@ final class FieldTypeMapper
     ];
 
     public function __construct(
-        private readonly PropertyNameNormalizer $nameNormalizer = new PropertyNameNormalizer(),
+        private PropertyNameNormalizer $nameNormalizer = new PropertyNameNormalizer(),
     ) {
     }
 

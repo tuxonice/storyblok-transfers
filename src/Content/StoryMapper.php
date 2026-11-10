@@ -17,11 +17,11 @@ use Tlab\TransferObjects\AbstractTransfer;
  * unwrapped to get it. The RelationMap arrives ready-made: it belongs to the
  * response, not to any one story in it.
  */
-final class StoryMapper
+final readonly class StoryMapper
 {
     public function __construct(
-        private readonly ComponentClassResolver $resolver,
-        private readonly StoryblokHydrator $hydrator,
+        private ComponentClassResolver $resolver,
+        private StoryblokHydrator $hydrator,
     ) {
     }
 

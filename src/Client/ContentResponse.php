@@ -12,15 +12,15 @@ namespace Tlab\StoryblokTransfers\Client;
  * body would push header handling out past the transport boundary. Both are
  * null for the endpoints that do not paginate.
  */
-final class ContentResponse
+final readonly class ContentResponse
 {
     /**
      * @param array<string, mixed> $body The decoded JSON body.
      */
     public function __construct(
-        public readonly array $body,
-        public readonly ?int $total = null,
-        public readonly ?int $perPage = null,
+        public array $body,
+        public ?int $total = null,
+        public ?int $perPage = null,
     ) {
     }
 }

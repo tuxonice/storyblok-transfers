@@ -17,7 +17,7 @@ use Tlab\StoryblokTransfers\Client\StoryblokApiException;
  * for version or language - it uses dimensions for translation - so in practice
  * only cv matters here.
  */
-final class DatasourceRepository
+final readonly class DatasourceRepository
 {
     /**
      * The endpoint's maximum page size, so a typical datasource is one request.
@@ -25,8 +25,8 @@ final class DatasourceRepository
     private const PER_PAGE = 1000;
 
     public function __construct(
-        private readonly ContentClient $client,
-        private readonly ContentOptions $defaults = new ContentOptions(),
+        private ContentClient $client,
+        private ContentOptions $defaults = new ContentOptions(),
     ) {
     }
 

@@ -25,10 +25,10 @@ use Tlab\TransferObjects\AbstractTransfer;
  * alone would drop full_slug, and a related story is almost always rendered as
  * a link to it.
  */
-final class RelationMapFactory
+final readonly class RelationMapFactory
 {
     public function __construct(
-        private readonly StoryMapper $mapper,
+        private StoryMapper $mapper,
     ) {
     }
 

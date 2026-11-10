@@ -28,7 +28,7 @@ use Tlab\TransferObjects\AbstractTransfer;
  *
  * @template-covariant T of AbstractTransfer
  */
-final class StoryTransfer
+final readonly class StoryTransfer
 {
     /**
      * @param T $content
@@ -36,19 +36,19 @@ final class StoryTransfer
      * @param array<string, mixed> $translatedSlugs
      */
     public function __construct(
-        private readonly string $uuid,
-        private readonly string $slug,
-        private readonly string $fullSlug,
-        private readonly AbstractTransfer $content,
-        private readonly RelationMap $relations,
-        private readonly ?string $name = null,
-        private readonly ?string $lang = null,
-        private readonly ?string $publishedAt = null,
-        private readonly ?string $firstPublishedAt = null,
-        private readonly ?string $createdAt = null,
-        private readonly ?int $parentId = null,
-        private readonly array $tagList = [],
-        private readonly array $translatedSlugs = [],
+        private string $uuid,
+        private string $slug,
+        private string $fullSlug,
+        private AbstractTransfer $content,
+        private RelationMap $relations,
+        private ?string $name = null,
+        private ?string $lang = null,
+        private ?string $publishedAt = null,
+        private ?string $firstPublishedAt = null,
+        private ?string $createdAt = null,
+        private ?int $parentId = null,
+        private array $tagList = [],
+        private array $translatedSlugs = [],
     ) {
     }
 

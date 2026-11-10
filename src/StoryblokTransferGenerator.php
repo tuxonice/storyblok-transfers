@@ -18,15 +18,15 @@ use Tlab\TransferObjects\DataTransferBuilder;
  *
  * Storyblok Management API -> JSON definition files -> PHP transfer classes
  */
-final class StoryblokTransferGenerator
+final readonly class StoryblokTransferGenerator
 {
-    private readonly ComponentSchemaFetcher $fetcher;
+    private ComponentSchemaFetcher $fetcher;
 
-    private readonly FieldTypeMapper $mapper;
+    private FieldTypeMapper $mapper;
 
-    private readonly DefinitionFileWriter $definitionWriter;
+    private DefinitionFileWriter $definitionWriter;
 
-    private readonly ComponentNameFormatter $nameFormatter;
+    private ComponentNameFormatter $nameFormatter;
 
     /**
      * @param string $authorizationScheme 'Bearer' for OAuth-issued tokens;
@@ -36,11 +36,11 @@ final class StoryblokTransferGenerator
      *        each have their own.
      */
     public function __construct(
-        private readonly string $spaceId,
+        private string $spaceId,
         string $token,
-        private readonly string $definitionsPath,
-        private readonly string $outputPath,
-        private readonly string $namespace,
+        private string $definitionsPath,
+        private string $outputPath,
+        private string $namespace,
         ?ClientInterface $httpClient = null,
         string $authorizationScheme = '',
         string $managementBaseUri = StoryblokManagementClient::DEFAULT_BASE_URI,
