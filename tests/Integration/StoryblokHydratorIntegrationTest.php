@@ -13,6 +13,7 @@ use Tlab\StoryblokTransfers\Hydration\StoryblokHydrator;
 use Tlab\StoryblokTransfers\StoryblokTransferGenerator;
 use Tlab\StoryblokTransfers\Tests\TempDirectory;
 use Tlab\StoryblokTransfers\Transfers\AssetTransfer;
+use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
 use Tlab\StoryblokTransfers\Transfers\LinkTransfer;
 use Tlab\TransferObjects\AbstractTransfer;
 
@@ -180,17 +181,105 @@ final class StoryblokHydratorIntegrationTest extends TestCase
         self::assertSame([$raw], $data['body']);
     }
 
-    public function testPassesRichtextThroughUntouched(): void
+    public function testHydratesARichtextFieldIntoARichtextTransfer(): void
     {
         $this->generate([
             ['name' => 'hero', 'schema' => ['body' => ['type' => 'richtext']]],
         ]);
 
-        $nodes = ['type' => 'doc', 'content' => [['type' => 'paragraph']]];
+        $document = ['type' => 'doc', 'content' => [['type' => 'paragraph']]];
 
-        $data = $this->hydrateToArray('HeroTransfer', ['body' => $nodes]);
+        $body = $this->hydrateToArray('HeroTransfer', ['body' => $document])['body'];
 
-        self::assertSame($nodes, $data['body']);
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+        self::assertSame($document['content'], $body->getContent());
+        self::assertSame($document, $body->toDocument());
+    }
+
+    public function testHydratesAComponentEmbeddedInARichtextField(): void
+    {
+        $this->generate([
+            ['name' => 'page', 'schema' => ['body' => ['type' => 'richtext']]],
+            ['name' => 'teaser', 'schema' => ['headline' => ['type' => 'text']]],
+        ]);
+
+        $body = $this->hydrateToArray('PageTransfer', [
+            'body' => [
+                'type' => 'doc',
+                'content' => [
+                    ['type' => 'blok', 'attrs' => ['id' => 'blok-1', 'body' => [
+                        ['component' => 'teaser', 'headline' => 'Embedded'],
+                    ]]],
+                ],
+            ],
+        ])['body'];
+
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+
+        $embedded = $body->getBloks()['blok-1'][0];
+        self::assertInstanceOf(AbstractTransfer::class, $embedded);
+        self::assertSame(['headline' => 'Embedded'], $embedded->toArray());
+    }
+
+    public function testKeepsAnEmbeddedComponentWithNoGeneratedClassAsARawArray(): void
+    {
+        $this->generate([
+            ['name' => 'page', 'schema' => ['body' => ['type' => 'richtext']]],
+        ]);
+
+        $raw = ['component' => 'newsletter_signup', 'title' => 'Subscribe'];
+
+        $body = $this->hydrateToArray('PageTransfer', [
+            'body' => [
+                'type' => 'doc',
+                'content' => [
+                    ['type' => 'blok', 'attrs' => ['id' => 'blok-1', 'body' => [$raw]]],
+                ],
+            ],
+        ])['body'];
+
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+        self::assertSame(['blok-1' => [$raw]], $body->getBloks());
+    }
+
+    public function testARichtextFieldInsideAnEmbeddedComponentBecomesItsOwnTransfer(): void
+    {
+        $this->generate([
+            ['name' => 'page', 'schema' => ['body' => ['type' => 'richtext']]],
+            ['name' => 'quote', 'schema' => ['body' => ['type' => 'richtext']]],
+        ]);
+
+        $inner = [
+            'type' => 'doc',
+            'content' => [
+                ['type' => 'blok', 'attrs' => ['id' => 'inner-1', 'body' => [
+                    ['component' => 'newsletter_signup'],
+                ]]],
+            ],
+        ];
+
+        $outer = $this->hydrateToArray('PageTransfer', [
+            'body' => [
+                'type' => 'doc',
+                'content' => [
+                    ['type' => 'blok', 'attrs' => ['id' => 'outer-1', 'body' => [
+                        ['component' => 'quote', 'body' => $inner],
+                    ]]],
+                ],
+            ],
+        ])['body'];
+
+        self::assertInstanceOf(RichtextTransfer::class, $outer);
+
+        // The outer document owns only the blok written into it.
+        self::assertSame(['outer-1'], array_keys($outer->getBloks()));
+
+        $quote = $outer->getBloks()['outer-1'][0];
+        self::assertInstanceOf(AbstractTransfer::class, $quote);
+
+        $quoteBody = $quote->toArray()['body'];
+        self::assertInstanceOf(RichtextTransfer::class, $quoteBody);
+        self::assertSame(['inner-1'], array_keys($quoteBody->getBloks()));
     }
 
     public function testPassesOptionsThroughAsStrings(): void

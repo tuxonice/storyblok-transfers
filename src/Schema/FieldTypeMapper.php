@@ -7,6 +7,7 @@ namespace Tlab\StoryblokTransfers\Schema;
 use Tlab\StoryblokTransfers\Transfers\AssetTransfer;
 use Tlab\StoryblokTransfers\Transfers\BlokTransfer;
 use Tlab\StoryblokTransfers\Transfers\LinkTransfer;
+use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
 
 /**
  * Maps a Storyblok schema field onto a transfer-objects property definition.
@@ -74,10 +75,11 @@ final class FieldTypeMapper
             'multiasset' => $this->transferList($name, 'AssetTransfer', AssetTransfer::class),
             'asset' => $this->transfer($name, 'AssetTransfer', AssetTransfer::class),
             'link', 'multilink' => $this->transfer($name, 'LinkTransfer', LinkTransfer::class),
+            'richtext' => $this->transfer($name, 'RichtextTransfer', RichtextTransfer::class),
             'options' => $this->scalarList($name, 'string'),
             default => in_array($storyblokType, self::STRING_TYPES, true)
                 ? $this->scalar($name, 'string')
-                // richtext, table, custom plugins and anything unknown.
+                // table, custom plugins and anything unknown.
                 : $this->scalar($name, 'array'),
         };
     }

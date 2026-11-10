@@ -7,6 +7,7 @@ namespace Tlab\StoryblokTransfers\Hydration;
 use InvalidArgumentException;
 use Tlab\StoryblokTransfers\Schema\PropertyNameNormalizer;
 use Tlab\StoryblokTransfers\Transfers\BlokTransfer;
+use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
 use Tlab\TransferObjects\AbstractTransfer;
 
 /**
@@ -16,6 +17,10 @@ use Tlab\TransferObjects\AbstractTransfer;
  * so a nested asset arrives as an array where an AssetTransfer is required. This
  * converts those values first and then delegates to fromArray(), which already
  * gets key camel-casing, setter dispatch and unknown-key skipping right.
+ *
+ * A richtext field takes the same route: its document becomes a
+ * RichtextTransfer, and the components embedded in its tree are hydrated and
+ * hung off it by key.
  */
 final class StoryblokHydrator
 {
@@ -24,6 +29,8 @@ final class StoryblokHydrator
     private readonly PropertyNameNormalizer $nameNormalizer;
 
     private readonly ComponentClassResolver $componentClassResolver;
+
+    private readonly RichtextBlokCollector $blokCollector;
 
     /**
      * @param string $namespace Namespace the generated transfers live in,
@@ -55,6 +62,7 @@ final class StoryblokHydrator
         $this->nameNormalizer = new PropertyNameNormalizer();
         $this->componentClassResolver = $componentClassResolver
             ?? new ComponentClassResolver($namespace);
+        $this->blokCollector = new RichtextBlokCollector();
     }
 
     /**
@@ -84,6 +92,10 @@ final class StoryblokHydrator
     {
         $nestedClass = $type->transferClass;
 
+        if ($nestedClass === RichtextTransfer::class) {
+            return is_array($value) ? $this->hydrateRichtext($value) : null;
+        }
+
         if ($nestedClass !== null) {
             // A missing asset or link arrives as "" or null, never as an array.
             // Every generated property is nullable, so null always assigns.
@@ -100,6 +112,26 @@ final class StoryblokHydrator
             fn (mixed $item): mixed => $this->convertElement($elementClass, $item),
             $value
         );
+    }
+
+    /**
+     * Richtext needs no pre-conversion of its own - RichtextTransfer has no
+     * transfer-typed property - so fromArray() is called directly, which also
+     * returns the precise type. Move this back to hydrate() if that changes.
+     *
+     * The bloks are collected from the tree rather than written into it: see
+     * RichtextTransfer for why the tree has to stay plain arrays.
+     *
+     * @param array<string, mixed> $document
+     */
+    private function hydrateRichtext(array $document): RichtextTransfer
+    {
+        $richtext = RichtextTransfer::fromArray($document);
+
+        return $richtext->setBloks($this->blokCollector->collect(
+            $richtext->getContent(),
+            fn (array $component): mixed => $this->convertElement(BlokTransfer::class, $component),
+        ));
     }
 
     /**

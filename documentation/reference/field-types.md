@@ -13,7 +13,7 @@ What each Storyblok field type becomes in a generated class.
 | `multiasset` | `array<AssetTransfer>` | |
 | `link`, `multilink` | `?LinkTransfer` | |
 | `bloks` | `array<BlokTransfer>` | Filled with your concrete classes; see [Hydrating content](../hydration.md#bloks-are-your-concrete-classes) |
-| `richtext` | `?array` | Storyblok's document structure. See [Limitations](../limitations.md#rich-text-is-a-raw-array) |
+| `richtext` | `?RichtextTransfer` | The document, plus the components inserted into it. See [Rich text](../rich-text.md) |
 | `table` | `?array` | Storyblok's table structure |
 | `tab`, `section` | not generated | Editor layout only; they hold no data |
 | anything else, such as a custom plugin | `?array` | Passed through as it is |
@@ -26,6 +26,18 @@ is nullable, since Storyblok rarely guarantees that a field is filled in.
 
 These ship with the package, under `Tlab\StoryblokTransfers\Transfers`, and the
 generated classes refer to them.
+
+### `RichtextTransfer`
+
+| Method | |
+|---|---|
+| `getType()` | `?string`, `doc` |
+| `getAttrs()` | document-level attributes, `[]` when there are none |
+| `getContent()` | the document's nodes, as Storyblok sent them |
+| `getBloks()` | the components inserted into the text, by blok id |
+| `toDocument()` | the whole document, for a renderer |
+
+See [Rich text](../rich-text.md).
 
 ### `AssetTransfer`
 

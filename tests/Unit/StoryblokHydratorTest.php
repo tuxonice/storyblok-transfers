@@ -10,8 +10,10 @@ use Tlab\StoryblokTransfers\Hydration\ComponentClassResolver;
 use Tlab\StoryblokTransfers\Hydration\HydrationException;
 use Tlab\StoryblokTransfers\Hydration\StoryblokHydrator;
 use Tlab\StoryblokTransfers\Tests\Fixture\NestedFixtureTransfer;
+use Tlab\StoryblokTransfers\Tests\Fixture\RichtextFixtureTransfer;
 use Tlab\StoryblokTransfers\Tests\Fixture\ScalarFixtureTransfer;
 use Tlab\StoryblokTransfers\Transfers\AssetTransfer;
+use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
 
 final class StoryblokHydratorTest extends TestCase
 {
@@ -78,14 +80,109 @@ final class StoryblokHydratorTest extends TestCase
         self::assertSame(['a', 'b'], $transfer->getTags());
     }
 
-    public function testPassesRichtextStructuresThroughUntouched(): void
+    public function testPassesStructuredArraysThroughUntouched(): void
     {
+        // The table and custom-plugin case: a plain array<mixed> property.
         $nodes = ['type' => 'doc', 'content' => [['type' => 'paragraph']]];
 
         $transfer = $this->hydrator->hydrate(ScalarFixtureTransfer::class, ['content' => $nodes]);
 
         self::assertInstanceOf(ScalarFixtureTransfer::class, $transfer);
         self::assertSame($nodes, $transfer->getContent());
+    }
+
+    public function testHydratesRichtextIntoARichtextTransfer(): void
+    {
+        $document = [
+            'type' => 'doc',
+            'attrs' => ['backgroundColor' => null],
+            'content' => [['type' => 'paragraph']],
+        ];
+
+        $transfer = $this->hydrator->hydrate(RichtextFixtureTransfer::class, ['body' => $document]);
+
+        self::assertInstanceOf(RichtextFixtureTransfer::class, $transfer);
+        $body = $transfer->getBody();
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+        self::assertSame('doc', $body->getType());
+        self::assertSame([['type' => 'paragraph']], $body->getContent());
+        self::assertSame($document, $body->toDocument());
+    }
+
+    public function testCollectsAComponentEmbeddedInRichtext(): void
+    {
+        // 'nested_fixture' resolves to NestedFixtureTransfer in the fixture
+        // namespace, the same lookup a generated class gets.
+        $transfer = $this->hydrator->hydrate(RichtextFixtureTransfer::class, [
+            'body' => [
+                'type' => 'doc',
+                'content' => [
+                    ['type' => 'paragraph'],
+                    ['type' => 'blok', 'attrs' => ['id' => 'blok-1', 'body' => [
+                        ['component' => 'nested_fixture', 'headline' => 'Embedded'],
+                    ]]],
+                ],
+            ],
+        ]);
+
+        self::assertInstanceOf(RichtextFixtureTransfer::class, $transfer);
+        $body = $transfer->getBody();
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+
+        $bloks = $body->getBloks();
+        self::assertArrayHasKey('blok-1', $bloks);
+        $embedded = $bloks['blok-1'][0];
+        self::assertInstanceOf(NestedFixtureTransfer::class, $embedded);
+        self::assertSame('Embedded', $embedded->getHeadline());
+    }
+
+    public function testLeavesTheNodeTreeAsPlainArrays(): void
+    {
+        $node = ['component' => 'nested_fixture', 'headline' => 'Embedded'];
+
+        $transfer = $this->hydrator->hydrate(RichtextFixtureTransfer::class, [
+            'body' => [
+                'type' => 'doc',
+                'content' => [
+                    ['type' => 'blok', 'attrs' => ['id' => 'blok-1', 'body' => [$node]]],
+                ],
+            ],
+        ]);
+
+        self::assertInstanceOf(RichtextFixtureTransfer::class, $transfer);
+        $body = $transfer->getBody();
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+
+        $content = $body->getContent();
+        self::assertIsArray($content[0]);
+        self::assertSame(['id' => 'blok-1', 'body' => [$node]], $content[0]['attrs']);
+    }
+
+    public function testKeepsAnEmbeddedComponentWithNoClassAsARawArray(): void
+    {
+        $unknown = ['component' => 'not_generated', 'title' => 'Subscribe'];
+
+        $transfer = $this->hydrator->hydrate(RichtextFixtureTransfer::class, [
+            'body' => [
+                'type' => 'doc',
+                'content' => [
+                    ['type' => 'blok', 'attrs' => ['id' => 'blok-1', 'body' => [$unknown]]],
+                ],
+            ],
+        ]);
+
+        self::assertInstanceOf(RichtextFixtureTransfer::class, $transfer);
+        $body = $transfer->getBody();
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+        self::assertSame(['blok-1' => [$unknown]], $body->getBloks());
+    }
+
+    public function testTurnsAnEmptyStringRichtextIntoNull(): void
+    {
+        $transfer = $this->hydrator->hydrate(RichtextFixtureTransfer::class, ['body' => '']);
+
+        self::assertInstanceOf(RichtextFixtureTransfer::class, $transfer);
+        self::assertNull($transfer->getBody());
     }
 
     public function testTurnsAnEmptyStringAssetIntoNullRatherThanThrowing(): void

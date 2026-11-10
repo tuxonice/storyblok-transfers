@@ -1,7 +1,7 @@
 # RichtextTransfer — Design
 
 **Date:** 2026-08-25
-**Status:** Proposed
+**Status:** Implemented (Unreleased, after v0.1.0)
 
 ## Problem
 

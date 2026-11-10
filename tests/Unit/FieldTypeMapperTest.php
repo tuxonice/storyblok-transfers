@@ -9,6 +9,7 @@ use Tlab\StoryblokTransfers\Schema\FieldTypeMapper;
 use Tlab\StoryblokTransfers\Transfers\AssetTransfer;
 use Tlab\StoryblokTransfers\Transfers\BlokTransfer;
 use Tlab\StoryblokTransfers\Transfers\LinkTransfer;
+use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
 
 final class FieldTypeMapperTest extends TestCase
 {
@@ -43,10 +44,15 @@ final class FieldTypeMapperTest extends TestCase
         );
     }
 
-    public function testMapsRichtextToNullableArray(): void
+    public function testMapsRichtextToARichtextTransfer(): void
     {
         self::assertSame(
-            ['name' => 'body', 'type' => 'array', 'nullable' => true],
+            [
+                'name' => 'body',
+                'type' => 'RichtextTransfer',
+                'nullable' => true,
+                'namespace' => RichtextTransfer::class,
+            ],
             $this->mapper->map('body', ['type' => 'richtext'])
         );
     }
@@ -56,6 +62,14 @@ final class FieldTypeMapperTest extends TestCase
         self::assertSame(
             ['name' => 'someWidget', 'type' => 'array', 'nullable' => true],
             $this->mapper->map('some_widget', ['type' => 'custom_plugin_xyz'])
+        );
+    }
+
+    public function testStillMapsTableToNullableArray(): void
+    {
+        self::assertSame(
+            ['name' => 'specs', 'type' => 'array', 'nullable' => true],
+            $this->mapper->map('specs', ['type' => 'table'])
         );
     }
 
