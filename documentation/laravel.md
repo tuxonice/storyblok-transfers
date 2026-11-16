@@ -91,6 +91,21 @@ A `post` component becomes `App\Storyblok\PostTransfer`. Commit both
 [Generating transfers](generating-transfers.md) for what they are and when to
 regenerate.
 
+When you delete a component in Storyblok, also delete its JSON file from
+`resources/storyblok`. The generator doesn't remove definitions on its own, so
+the class would keep being generated.
+
+The generated classes don't follow Laravel Pint's style, and every run
+rewrites them, so formatting them is wasted work. Leave them out of Pint in
+`pint.json`:
+
+```json
+{
+    "preset": "laravel",
+    "exclude": ["app/Storyblok"]
+}
+```
+
 ## The cache store
 
 Give Storyblok a cache store of its own, in `config/cache.php`:

@@ -142,7 +142,7 @@ cache directly.
 Storyblok's own cache version, `cv`, can also be passed on every read:
 
 ```php
-$options = (new ContentOptions())->withCv((string) $cacheVersion);
+$options = $storyblok->defaults()->withCv((string) $cacheVersion);
 ```
 
 A different `cv` is a different read, so it gets its own cache entry. The

@@ -10,19 +10,22 @@ by its uuid.
 Name the fields to resolve as `component.field`:
 
 ```php
-use Tlab\StoryblokTransfers\Content\ContentOptions;
-
-$options = (new ContentOptions())->withResolveRelations(['post.author']);
+$options = $storyblok->defaults()->withResolveRelations(['post.author']);
 
 $story = $storyblok->stories()->bySlug('blog/hello-world', null, $options);
 ```
+
+Start from `$storyblok->defaults()` rather than `new ContentOptions()`. Options
+passed to a call replace the defaults as a whole, so a fresh `ContentOptions`
+would read the published version even when the defaults ask for drafts. See
+[Defaults and overrides](reading-content.md#defaults-and-overrides).
 
 Listings take the same options through `StoryQuery`:
 
 ```php
 $list = $storyblok->stories()->findBy(new StoryQuery(
     startsWith: 'blog/',
-    options: (new ContentOptions())->withResolveRelations(['post.author']),
+    options: $storyblok->defaults()->withResolveRelations(['post.author']),
 ));
 ```
 

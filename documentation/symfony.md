@@ -153,6 +153,10 @@ Commit both `src/Storyblok` and `config/storyblok`; see
 regenerate. For a space outside the EU, pass your region's Management API
 address as `managementBaseUri`.
 
+When you delete a component in Storyblok, also delete its JSON file from
+`config/storyblok`. The generator doesn't remove definitions on its own, so
+the class would keep being generated.
+
 ## A blog
 
 With a `post` component and stories under `blog/`, and Twig installed

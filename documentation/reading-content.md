@@ -143,6 +143,21 @@ new StoryQuery(filterQuery: [
 ]);
 ```
 
+To filter by a reference field, match the operation to the field's type:
+
+- a field that holds **one** story, such as a post's author: `in`
+- a field that holds **several** stories, such as a post's categories:
+  `any_in_array`
+
+```php
+new StoryQuery(filterQuery: ['author' => ['in' => $author->getUuid()]]);
+new StoryQuery(filterQuery: ['categories' => ['any_in_array' => $category->getUuid()]]);
+```
+
+The wrong operation isn't an error. Storyblok returns no stories, just as it
+would for a uuid that matches nothing, so an empty list here is worth checking
+against the field's type.
+
 ### Pages
 
 `$list` is one page of results.
@@ -222,4 +237,16 @@ $list = $storyblok->stories()->findBy(new StoryQuery(
 ```
 
 Per-call options replace the defaults as a whole; they are not merged field by
-field.
+field. A `new ContentOptions()` therefore starts from the published version,
+whatever the defaults say. To change one setting and keep the rest, start
+from the defaults with `defaults()`:
+
+```php
+// Drafts stay drafts: only the language changes
+$story = $storyblok->stories()->bySlug('home', null, $storyblok->defaults()->withLanguage('de'));
+```
+
+This matters most in a preview environment. A call that passes
+`(new ContentOptions())->withResolveRelations([...])` reads the published
+version, while every other call reads drafts, and nothing reports the
+difference.
