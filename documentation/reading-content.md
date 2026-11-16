@@ -71,6 +71,7 @@ A `StoryTransfer`: the story's details, plus its content as your generated class
 
 ```php
 $story->getContent();          // PageTransfer, HeroTransfer, … your class
+$story->getId();               // the numeric story id, or null
 $story->getUuid();
 $story->getSlug();             // 'hello-world'
 $story->getFullSlug();         // 'blog/hello-world'

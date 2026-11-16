@@ -22,6 +22,14 @@ What each Storyblok field type becomes in a generated class.
 `tuxonice/transfer-objects` doesn't allow nullable arrays. Every other property
 is nullable, since Storyblok rarely guarantees that a field is filled in.
 
+**Every generated class also has `getUid()` and `getEditable()`**, both
+`?string`. They hold the `_uid` and `_editable` Storyblok sends on every
+component. `_editable` is the comment the Visual Editor uses to outline a block,
+and comes only with drafts, so it's `null` on published reads. See
+[Click-to-edit in the Visual Editor](../laravel.md#click-to-edit-in-the-visual-editor).
+A component with its own field named `uid` or `editable` keeps that field; see
+[Limitations](../limitations.md#a-field-named-uid-or-editable-hides-storybloks-metadata).
+
 ## Bundled transfers
 
 These ship with the package, under `Tlab\StoryblokTransfers\Transfers`, and the

@@ -150,6 +150,7 @@ final readonly class StoryMapper
             is_int($story['parent_id'] ?? null) ? $story['parent_id'] : null,
             $this->stringList($story, 'tag_list'),
             is_array($story['translated_slugs'] ?? null) ? $story['translated_slugs'] : [],
+            is_int($story['id'] ?? null) ? $story['id'] : null,
         );
     }
 

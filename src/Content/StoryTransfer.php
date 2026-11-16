@@ -49,6 +49,7 @@ final readonly class StoryTransfer
         private ?int $parentId = null,
         private array $tagList = [],
         private array $translatedSlugs = [],
+        private ?int $id = null,
     ) {
     }
 
@@ -58,6 +59,15 @@ final readonly class StoryTransfer
     public function getContent(): AbstractTransfer
     {
         return $this->content;
+    }
+
+    /**
+     * The numeric story id, which the Visual Editor bridge reports in its
+     * events. Null when the response did not carry one.
+     */
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 
     public function getUuid(): string

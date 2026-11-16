@@ -52,6 +52,14 @@ final class StoryMapperTest extends TestCase
         self::assertSame(7, $story->getParentId());
         self::assertSame(['featured'], $story->getTagList());
         self::assertSame(['de' => ['path' => 'de/start']], $story->getTranslatedSlugs());
+        self::assertSame(42, $story->getId());
+    }
+
+    public function testIgnoresANonIntegerStoryId(): void
+    {
+        $story = $this->mapper->mapOne(['id' => '42'] + $this->storyPayload(), new RelationMap());
+
+        self::assertNull($story->getId());
     }
 
     public function testAcceptsAStoryWithOnlyTheGuaranteedKeys(): void
@@ -65,6 +73,7 @@ final class StoryMapperTest extends TestCase
 
         self::assertNull($story->getName());
         self::assertNull($story->getParentId());
+        self::assertNull($story->getId());
         self::assertSame([], $story->getTagList());
     }
 
@@ -151,6 +160,7 @@ final class StoryMapperTest extends TestCase
     private function storyPayload(): array
     {
         return [
+            'id' => 42,
             'uuid' => 'story-uuid-1',
             'slug' => 'home',
             'full_slug' => 'en/home',

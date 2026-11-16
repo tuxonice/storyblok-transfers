@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Tlab\StoryblokTransfers\Tests\Unit;
 
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tlab\StoryblokTransfers\Hydration\ComponentClassResolver;
 use Tlab\StoryblokTransfers\Hydration\HydrationException;
 use Tlab\StoryblokTransfers\Hydration\StoryblokHydrator;
+use Tlab\StoryblokTransfers\Tests\Fixture\CollidingFixtureTransfer;
+use Tlab\StoryblokTransfers\Tests\Fixture\MetaFixtureTransfer;
 use Tlab\StoryblokTransfers\Tests\Fixture\NestedFixtureTransfer;
 use Tlab\StoryblokTransfers\Tests\Fixture\RichtextFixtureTransfer;
+use Tlab\StoryblokTransfers\Tests\Fixture\TypedCollidingFixtureTransfer;
 use Tlab\StoryblokTransfers\Tests\Fixture\ScalarFixtureTransfer;
 use Tlab\StoryblokTransfers\Transfers\AssetTransfer;
 use Tlab\StoryblokTransfers\Transfers\RichtextTransfer;
@@ -230,5 +234,106 @@ final class StoryblokHydratorTest extends TestCase
         $this->expectExceptionMessageMatches('/not a transfer/');
 
         $this->hydrator->hydrate(self::class, []);
+    }
+
+    public function testKeepsUidAndEditable(): void
+    {
+        $transfer = $this->hydrator->hydrate(MetaFixtureTransfer::class, [
+            'component' => 'meta_fixture',
+            '_uid' => 'u1',
+            '_editable' => '<!--e1-->',
+            'title' => 'T',
+        ]);
+
+        self::assertInstanceOf(MetaFixtureTransfer::class, $transfer);
+        self::assertSame('u1', $transfer->getUid());
+        self::assertSame('<!--e1-->', $transfer->getEditable());
+    }
+
+    public function testUidAndEditableAreNullOnAPublishedRead(): void
+    {
+        $transfer = $this->hydrator->hydrate(MetaFixtureTransfer::class, [
+            'component' => 'meta_fixture',
+            'title' => 'T',
+        ]);
+
+        self::assertInstanceOf(MetaFixtureTransfer::class, $transfer);
+        self::assertNull($transfer->getUid());
+        self::assertNull($transfer->getEditable());
+    }
+
+    /**
+     * @param array<string, string> $content
+     */
+    #[DataProvider('collidingPayloads')]
+    public function testASchemaFieldWinsOverTheMetadataKey(array $content): void
+    {
+        $transfer = $this->hydrator->hydrate(CollidingFixtureTransfer::class, $content);
+
+        self::assertInstanceOf(CollidingFixtureTransfer::class, $transfer);
+        self::assertSame('field', $transfer->getUid());
+        self::assertSame('field', $transfer->getEditable());
+    }
+
+    /**
+     * @return array<string, array{array<string, string>}>
+     */
+    public static function collidingPayloads(): array
+    {
+        return [
+            'metadata first' => [['_uid' => 'meta', 'uid' => 'field', '_editable' => 'meta', 'editable' => 'field']],
+            'metadata last' => [['uid' => 'field', '_uid' => 'meta', 'editable' => 'field', '_editable' => 'meta']],
+            'field keys spelled differently' => [
+                ['uid_' => 'field', '_uid' => 'meta', 'Editable' => 'field', '_editable' => 'meta'],
+            ],
+        ];
+    }
+
+    public function testMetadataNeverReachesANonStringFieldOfTheSameName(): void
+    {
+        // A field added after the content was last saved is absent from the
+        // payload, so nothing but the property type says the metadata is not
+        // the field's value.
+        $transfer = $this->hydrator->hydrate(TypedCollidingFixtureTransfer::class, [
+            '_uid' => 'abc-123',
+            '_editable' => '<!--#storyblok#{}-->',
+        ]);
+
+        self::assertInstanceOf(TypedCollidingFixtureTransfer::class, $transfer);
+        self::assertNull($transfer->getUid());
+        self::assertNull($transfer->getEditable());
+    }
+
+    public function testKeepsEditableOnNestedBloks(): void
+    {
+        $transfer = $this->hydrator->hydrate(NestedFixtureTransfer::class, [
+            'body' => [['component' => 'meta_fixture', '_uid' => 'b1', '_editable' => '<!--b1-->']],
+        ]);
+
+        self::assertInstanceOf(NestedFixtureTransfer::class, $transfer);
+        $blok = $transfer->getBody()[0];
+        self::assertInstanceOf(MetaFixtureTransfer::class, $blok);
+        self::assertSame('<!--b1-->', $blok->getEditable());
+    }
+
+    public function testKeepsEditableOnBloksEmbeddedInRichtext(): void
+    {
+        $transfer = $this->hydrator->hydrate(RichtextFixtureTransfer::class, [
+            'body' => [
+                'type' => 'doc',
+                'content' => [
+                    ['type' => 'blok', 'attrs' => ['id' => 'blok-1', 'body' => [
+                        ['component' => 'meta_fixture', '_uid' => 'r1', '_editable' => '<!--r1-->'],
+                    ]]],
+                ],
+            ],
+        ]);
+
+        self::assertInstanceOf(RichtextFixtureTransfer::class, $transfer);
+        $body = $transfer->getBody();
+        self::assertInstanceOf(RichtextTransfer::class, $body);
+        $embedded = $body->getBloks()['blok-1'][0];
+        self::assertInstanceOf(MetaFixtureTransfer::class, $embedded);
+        self::assertSame('<!--r1-->', $embedded->getEditable());
     }
 }

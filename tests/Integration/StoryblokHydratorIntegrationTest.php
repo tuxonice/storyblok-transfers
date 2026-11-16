@@ -128,11 +128,11 @@ final class StoryblokHydratorIntegrationTest extends TestCase
         $first = $body[0];
         self::assertInstanceOf(AbstractTransfer::class, $first);
         self::assertSame($this->namespace . '\\TeaserTransfer', $first::class);
-        self::assertSame(['headline' => 'First'], $first->toArray());
+        self::assertSame(['headline' => 'First', 'uid' => null, 'editable' => null], $first->toArray());
 
         $second = $body[1];
         self::assertInstanceOf(AbstractTransfer::class, $second);
-        self::assertSame(['headline' => 'Second'], $second->toArray());
+        self::assertSame(['headline' => 'Second', 'uid' => null, 'editable' => null], $second->toArray());
     }
 
     public function testHydratesABlokNestedInsideABlok(): void
@@ -165,7 +165,7 @@ final class StoryblokHydratorIntegrationTest extends TestCase
         $teaser = $columns[0];
         self::assertInstanceOf(AbstractTransfer::class, $teaser);
         self::assertSame($this->namespace . '\\TeaserTransfer', $teaser::class);
-        self::assertSame(['headline' => 'Deep'], $teaser->toArray());
+        self::assertSame(['headline' => 'Deep', 'uid' => null, 'editable' => null], $teaser->toArray());
     }
 
     public function testLeavesAnUnknownComponentAsARawArray(): void
@@ -218,7 +218,7 @@ final class StoryblokHydratorIntegrationTest extends TestCase
 
         $embedded = $body->getBloks()['blok-1'][0];
         self::assertInstanceOf(AbstractTransfer::class, $embedded);
-        self::assertSame(['headline' => 'Embedded'], $embedded->toArray());
+        self::assertSame(['headline' => 'Embedded', 'uid' => null, 'editable' => null], $embedded->toArray());
     }
 
     public function testKeepsAnEmbeddedComponentWithNoGeneratedClassAsARawArray(): void

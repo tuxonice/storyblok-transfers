@@ -61,3 +61,20 @@ the relations up before rendering the parts.
 
 This is the price of keeping the generated property a plain `?string` uuid: the
 alternative would change every generated class.
+
+## A field named `uid` or `editable` hides Storyblok's metadata
+
+Generated classes keep Storyblok's `_uid` and `_editable` as `uid` and
+`editable`. A component with a field of its own under one of those names keeps
+the field instead: `getUid()` or `getEditable()` returns what the editor typed,
+and the metadata is dropped. The generator warns when this happens. To get both,
+rename the field in Storyblok and regenerate.
+
+There is one gap. If the field is text and a story was last saved before the
+field was added, that story's content has no value for the field, and
+`getUid()` or `getEditable()` returns Storyblok's metadata instead of `null`.
+Saving the story again fixes it. Fields of other types, such as a number or a
+boolean, never receive the metadata.
+
+Either way, don't print such an `editable` field unescaped as if it were the
+Visual Editor's comment. It holds whatever the editor typed.

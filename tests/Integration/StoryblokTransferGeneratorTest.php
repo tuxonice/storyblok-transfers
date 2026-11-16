@@ -213,6 +213,81 @@ final class StoryblokTransferGeneratorTest extends TestCase
         self::assertSame(['a', 'b'], $transfer->getTags());
     }
 
+    public function testAppendsUidAndEditableToEveryDefinition(): void
+    {
+        $this->generatorFor([
+            ['name' => 'hero', 'schema' => ['title' => ['type' => 'text']]],
+        ])->generate();
+
+        $properties = $this->definitionProperties('Hero');
+
+        self::assertSame(
+            [
+                ['name' => 'uid', 'type' => 'string', 'nullable' => true],
+                ['name' => 'editable', 'type' => 'string', 'nullable' => true],
+            ],
+            array_slice($properties, -2)
+        );
+    }
+
+    public function testGeneratedClassHydratesUidAndEditable(): void
+    {
+        $this->generatorFor([
+            ['name' => 'editable_round_trip', 'schema' => ['headline' => ['type' => 'text']]],
+        ])->generate();
+
+        require $this->outputPath . '/EditableRoundTripTransfer.php';
+
+        /** @var class-string<\Tlab\TransferObjects\AbstractTransfer> $class */
+        $class = 'App\\DataTransferObjects\\EditableRoundTripTransfer';
+
+        $transfer = $class::fromArray([
+            '_uid' => 'abc-123',
+            '_editable' => '<!--#storyblok#{"id":1}-->',
+            'headline' => 'Hi',
+        ]);
+
+        /** @phpstan-ignore-next-line */
+        self::assertSame('abc-123', $transfer->getUid());
+        /** @phpstan-ignore-next-line */
+        self::assertSame('<!--#storyblok#{"id":1}-->', $transfer->getEditable());
+    }
+
+    public function testASchemaFieldNamedUidOrEditableWinsAndIsReported(): void
+    {
+        $result = $this->generatorFor([
+            [
+                'name' => 'hero',
+                'schema' => [
+                    'uid' => ['type' => 'text'],
+                    'editable' => ['type' => 'boolean'],
+                    'title' => ['type' => 'text'],
+                ],
+            ],
+        ])->generate();
+
+        $byName = [];
+
+        foreach ($this->definitionProperties('Hero') as $property) {
+            $byName[$property['name']][] = $property;
+        }
+
+        self::assertSame([['name' => 'uid', 'type' => 'string', 'nullable' => true]], $byName['uid']);
+        self::assertSame([['name' => 'editable', 'type' => 'bool', 'nullable' => true]], $byName['editable']);
+
+        self::assertCount(2, $result->warnings);
+        self::assertStringContainsString('hero', $result->warnings[0]);
+        self::assertStringContainsString('"uid"', $result->warnings[0]);
+        self::assertStringContainsString('hero', $result->warnings[1]);
+        self::assertStringContainsString('"editable"', $result->warnings[1]);
+
+        $file = $this->outputPath . '/HeroTransfer.php';
+
+        exec('php -l ' . escapeshellarg($file) . ' 2>&1', $output, $exitCode);
+
+        self::assertSame(0, $exitCode, implode("\n", $output) . "\n\n" . (string) file_get_contents($file));
+    }
+
     /**
      * Characterises a limitation of transfer-objects rather than of this
      * package: fromArray() passes raw payload values straight to the setter, so
@@ -284,5 +359,18 @@ final class StoryblokTransferGeneratorTest extends TestCase
             namespace: 'App\\DataTransferObjects',
             httpClient: new Client(['handler' => HandlerStack::create($handler)]),
         );
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function definitionProperties(string $transferName): array
+    {
+        $json = (string) file_get_contents($this->definitionsPath . '/' . $transferName . '.json');
+
+        /** @var array{transfers: list<array{properties: list<array<string, mixed>>}>} $definition */
+        $definition = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        return $definition['transfers'][0]['properties'];
     }
 }

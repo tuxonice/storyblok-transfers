@@ -281,3 +281,33 @@ if it fails, and for the signature Storyblok can send.
 For a preview environment, use the preview token and set
 `STORYBLOK_DEFAULT_VERSION=draft`. Every read then shows unpublished changes,
 and drafts are never cached, so editors see their edits at once.
+
+### Click-to-edit in the Visual Editor
+
+Storyblok's Visual Editor outlines a block, and opens its fields when it's
+clicked, if the page prints the block's `_editable` comment just before it.
+Every generated class has it as `getEditable()`:
+
+```blade
+@foreach ($page->getBody() as $blok)
+    @continue(!is_object($blok)) {{-- a component you haven't generated yet --}}
+    {!! $blok->getEditable() !!}
+    @include('bloks.' . class_basename($blok), ['blok' => $blok])
+@endforeach
+```
+
+Storyblok sends the comment only with drafts, so `getEditable()` is `null` on
+published reads, and the line can stay in your templates. `getUid()` holds the
+block's `_uid`, and `$story->getId()` the numeric story id that the Storyblok
+bridge's events carry, so you can check that an event is about the story on
+screen.
+
+Print the comment unescaped (`{!! !!}`, not `{{ }}`). Escaped, it shows up as
+text and the editor finds nothing to outline. The `@continue` line matters most
+here: editors add components in the Visual Editor before you regenerate, and
+those arrive as raw arrays (see
+[Hydrating content](hydration.md#bloks-are-your-concrete-classes)).
+
+If a component has a field of its own named `editable`, `getEditable()` returns
+what the editor typed, not Storyblok's comment. Don't print that unescaped. See
+[Limitations](limitations.md#a-field-named-uid-or-editable-hides-storybloks-metadata).

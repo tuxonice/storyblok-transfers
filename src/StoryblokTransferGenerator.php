@@ -20,6 +20,13 @@ use Tlab\TransferObjects\DataTransferBuilder;
  */
 final readonly class StoryblokTransferGenerator
 {
+    /**
+     * Storyblok sends `_uid` and `_editable` on every component, and
+     * AbstractTransfer::fromArray() maps them to these property names. The
+     * Visual Editor needs `_editable` to outline a block.
+     */
+    private const METADATA_PROPERTIES = ['uid', 'editable'];
+
     private ComponentSchemaFetcher $fetcher;
 
     private FieldTypeMapper $mapper;
@@ -88,6 +95,8 @@ final readonly class StoryblokTransferGenerator
                 continue;
             }
 
+            $properties = $this->withStoryblokMetadata($component['name'], $properties, $warnings);
+
             $this->definitionWriter->write($this->definitionsPath, $component['name'], $properties);
             $componentNames[] = $this->nameFormatter->toTransferName($component['name']);
         }
@@ -114,6 +123,41 @@ final readonly class StoryblokTransferGenerator
             $fieldKey,
             $componentName
         );
+    }
+
+    /**
+     * Appended after the schema fields, and only to a component that already
+     * has some: metadata alone is no reason to generate a class.
+     *
+     * A schema field with the same name keeps the property. Two properties of
+     * one name would not compile, and the field is the data the editor typed.
+     *
+     * @param list<array<string,mixed>> $properties
+     * @param list<string> $warnings
+     *
+     * @return list<array<string,mixed>>
+     */
+    private function withStoryblokMetadata(string $componentName, array $properties, array &$warnings): array
+    {
+        $taken = array_column($properties, 'name');
+
+        foreach (self::METADATA_PROPERTIES as $name) {
+            if (in_array($name, $taken, true)) {
+                $warnings[] = sprintf(
+                    'Component "%1$s" has a field named "%2$s", so get%3$s() returns that field rather than '
+                    . 'Storyblok\'s _%2$s.',
+                    $componentName,
+                    $name,
+                    ucfirst($name)
+                );
+
+                continue;
+            }
+
+            $properties[] = ['name' => $name, 'type' => 'string', 'nullable' => true];
+        }
+
+        return $properties;
     }
 
     private function ensureDirectory(string $path): void

@@ -73,6 +73,13 @@ foreach ($page->getBody() as $blok) {
 See [Limitations](limitations.md#bloks-hold-more-than-their-declared-type-says)
 for why the declared type is narrower than what's inside.
 
+## Storyblok's `_uid` and `_editable`
+
+Every component Storyblok sends carries a `_uid`, and drafts also carry an
+`_editable` comment for the Visual Editor. The hydrator keeps both, at every
+depth: on the root, on nested bloks and on components inside rich text. Read
+them with `getUid()` and `getEditable()`.
+
 ## Errors
 
 `hydrate()` throws `HydrationException` only for a programming mistake: a class

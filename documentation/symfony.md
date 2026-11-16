@@ -278,3 +278,33 @@ if it fails, and for the signature Storyblok can send.
 For a preview environment, use the preview token and set
 `STORYBLOK_DEFAULT_VERSION=draft`. Every read then shows unpublished changes,
 and drafts are never cached, so editors see their edits at once.
+
+### Click-to-edit in the Visual Editor
+
+Storyblok's Visual Editor outlines a block, and opens its fields when it's
+clicked, if the page prints the block's `_editable` comment just before it.
+Every generated class has it as `getEditable()`:
+
+```twig
+{% for blok in page.body|filter(blok => blok is not iterable) %}
+    {{ blok.editable|raw }}
+    {{ include('bloks/' ~ blok_template(blok), {blok: blok}) }}
+{% endfor %}
+```
+
+`blok_template()` stands for however your app picks a template per class. The
+filter skips components you haven't generated yet, which arrive as raw arrays
+(see [Hydrating content](hydration.md#bloks-are-your-concrete-classes)). Editors
+add those in the Visual Editor before you regenerate.
+
+Storyblok sends the comment only with drafts, so `getEditable()` is `null` on
+published reads, and the line can stay in your templates. `getUid()` holds the
+block's `_uid`, and `story.id` the numeric story id that the Storyblok bridge's
+events carry, so you can check that an event is about the story on screen.
+
+Print the comment with `|raw`. Escaped, it shows up as text and the editor finds
+nothing to outline.
+
+If a component has a field of its own named `editable`, `blok.editable` returns
+what the editor typed, not Storyblok's comment. Don't print that with `|raw`. See
+[Limitations](limitations.md#a-field-named-uid-or-editable-hides-storybloks-metadata).

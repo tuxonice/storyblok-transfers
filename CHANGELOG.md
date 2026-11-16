@@ -7,6 +7,24 @@ the package uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Generated classes keep what the Storyblok Visual Editor needs for
+click-to-edit. **Regenerate your classes to get it.**
+
+### Added
+
+- **Click-to-edit in the Visual Editor.** Every generated class has
+  `getUid()` and `getEditable()`, filled from the `_uid` and `_editable`
+  Storyblok sends on each component, at any depth. Print `getEditable()` before
+  a block to get its outline; it's `null` on published reads. A component with
+  its own field named `uid` or `editable` keeps the field, and the generator
+  warns. See
+  [Click-to-edit in the Visual Editor](documentation/laravel.md#click-to-edit-in-the-visual-editor).
+- **The story id.** `StoryTransfer::getId()` returns the numeric story id.
+
+### Changed
+
+- `toArray()` on a generated class now includes `uid` and `editable`.
+
 ## [0.4.0] - 2026-11-10
 
 The cache can now be cleared on demand, so a change published in Storyblok

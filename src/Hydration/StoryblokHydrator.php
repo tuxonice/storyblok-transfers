@@ -32,6 +32,8 @@ final readonly class StoryblokHydrator
 
     private RichtextBlokCollector $blokCollector;
 
+    private MetadataKeyFilter $metadataKeyFilter;
+
     /**
      * @param string $namespace Namespace the generated transfers live in,
      *                          e.g. 'App\DataTransferObjects'.
@@ -63,6 +65,7 @@ final readonly class StoryblokHydrator
         $this->componentClassResolver = $componentClassResolver
             ?? new ComponentClassResolver($namespace);
         $this->blokCollector = new RichtextBlokCollector();
+        $this->metadataKeyFilter = new MetadataKeyFilter($this->nameNormalizer);
     }
 
     /**
@@ -74,6 +77,10 @@ final readonly class StoryblokHydrator
     public function hydrate(string $transferClass, array $content): AbstractTransfer
     {
         $this->assertHydratable($transferClass);
+
+        // A schema field named uid or editable owns the property; see
+        // MetadataKeyFilter for how it is told apart from the metadata.
+        $content = $this->metadataKeyFilter->filter($transferClass, $content);
 
         $types = $this->typeResolver->resolve($transferClass);
         $converted = [];
